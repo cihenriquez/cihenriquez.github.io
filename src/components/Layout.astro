@@ -1,0 +1,57 @@
+---
+import { content, links, type Lang } from '../i18n/content';
+import { url } from '../i18n/url';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+interface Props { lang: Lang; title: string; description: string; homeHref: string; altHref: string }
+const { lang, title, description, homeHref, altHref } = Astro.props;
+const t = content[lang];
+const alt = lang === 'es' ? 'en' : 'es';
+const site = Astro.site?.origin ?? '';
+---
+<!doctype html>
+<html lang={t.htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="alternate" hreflang={alt} href={`${site}${url(altHref)}`} />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <a class="brand" href={url(homeHref)}>{t.name}</a>
+        <LanguageSwitcher lang={lang} href={url(altHref)} label={t.switchTo} />
+      </header>
+      <slot />
+      <footer>
+        <h2>{t.contactTitle}</h2>
+        <ul class="links">
+          <li><a href={`mailto:${links.email}`}>{links.email}</a></li>
+          <li><a href={links.linkedin}>LinkedIn</a></li>
+          <li><a href={links.github}>GitHub</a></li>
+          <li><a href={links.tekknight}>tekknight.io</a></li>
+        </ul>
+        <p class="meta">{t.location}</p>
+      </footer>
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  :root { --board: #0f3a2e; --deep: #0a2a21; --ink: #eaf1e8; --muted: #a3bcb0; --gold: #e3bd5c; --trace: #2a5a4b; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--board); color: var(--ink); font: 1.05rem/1.65 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  .wrap { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+  a { color: var(--ink); text-underline-offset: 3px; }
+  a:hover { color: var(--gold); }
+  a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .brand { font-weight: 700; text-decoration: none; }
+  h1 { font-size: clamp(1.9rem, 5.2vw, 3.3rem); line-height: 1.12; letter-spacing: -0.02em; margin: 0; max-width: 22ch; }
+  h2 { font-size: 1.25rem; margin: 0 0 1.25rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--trace); }
+  h3 { margin: 0 0 0.5rem; font-size: 1.35rem; line-height: 1.25; }
+  .meta, .tags { font: 0.85rem ui-monospace, 'SF Mono', Consolas, monospace; color: var(--muted); }
+  .links { list-style: none; padding: 0; margin: 0 0 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+  footer { margin-top: 5rem; }
+</style>

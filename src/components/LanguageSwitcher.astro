@@ -1,0 +1,15 @@
+---
+import type { Lang } from '../i18n/content';
+interface Props { lang: Lang; href: string; label: string }
+const { lang, href, label } = Astro.props;
+const target = lang === 'es' ? 'en' : 'es';
+---
+<nav aria-label="Language">
+  <span aria-current="true">{lang.toUpperCase()}</span>
+  <a href={href} hreflang={target} lang={target}>{label}</a>
+</nav>
+<style>
+  nav { display: flex; gap: 0.75rem; align-items: baseline; font-size: 0.9rem; }
+  [aria-current] { color: var(--gold); font-weight: 700; }
+  a { color: var(--muted); }
+</style>

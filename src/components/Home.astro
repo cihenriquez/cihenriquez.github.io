@@ -1,0 +1,55 @@
+---
+import { content, type Lang } from '../i18n/content';
+import { url } from '../i18n/url';
+import Layout from './Layout.astro';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = content[lang];
+const homeHref = lang === 'es' ? '/' : '/en/';
+const altHref = lang === 'es' ? '/en/' : '/';
+---
+<Layout lang={lang} title={t.siteTitle} description={t.description} homeHref={homeHref} altHref={altHref}>
+  <section class="hero"><h1>{t.intro}</h1></section>
+
+  <section>
+    <h2>{t.projectsTitle}</h2>
+    {t.projects.map((p) => (
+      <a class="project" href={url(p.href)} aria-label={p.title}>
+        {p.image && <img src={url(p.image)} alt={p.imageAlt} loading="lazy" />}
+        <div>
+          <h3>{p.title}</h3>
+          <p>{p.summary}</p>
+          <p class="tags">{p.tags.join(' / ')}</p>
+          <p class="cta">{p.cta ?? t.viewProject}</p>
+        </div>
+      </a>
+    ))}
+  </section>
+
+  <section class="about">
+    <h2>{t.aboutTitle}</h2>
+    {t.about.map((p) => <p>{p}</p>)}
+    <h2 class="sub">{t.skillsTitle}</h2>
+    <dl>
+      {t.skills.map(([k, v]) => (<><dt>{k}</dt><dd>{v}</dd></>))}
+    </dl>
+  </section>
+</Layout>
+
+<style is:global>
+  .hero { padding: 4.5rem 0 3.5rem; }
+  .project { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.75rem; align-items: center; text-decoration: none; color: inherit; padding: 1.5rem 0; border-bottom: 1px solid var(--trace); }
+  .project:not(:has(img)) { grid-template-columns: 1fr; }
+  .project img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid var(--trace); border-radius: 4px; background: var(--deep); }
+  .project h3 { text-decoration: underline; text-decoration-color: var(--trace); text-underline-offset: 4px; }
+  .project:hover h3, .project:focus-visible h3 { color: var(--gold); text-decoration-color: var(--gold); }
+  .project p { margin: 0 0 0.75rem; }
+  .cta { color: var(--gold); font-weight: 600; }
+  .about { margin-top: 4rem; }
+  .about p { max-width: 42rem; }
+  .sub { margin-top: 2.5rem; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1.5rem; margin: 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; }
+  @media (max-width: 40rem) { .project { grid-template-columns: 1fr; } dl { grid-template-columns: 1fr; gap: 0; } dd { margin-bottom: 0.75rem; } }
+</style>
