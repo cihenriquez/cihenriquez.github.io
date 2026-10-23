@@ -1,63 +1,47 @@
-# Astro Starter Kit: Blog
+# cihenriquez.github.io
 
-```sh
-npm create astro@latest -- --template blog
-```
+Portfolio of Cristian Henríquez, an electrical and electronics engineer (MSc, PUC Chile) who designs electronics and firmware for robots and embedded devices, from the schematic to the finished product.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Live at **https://cihenriquez.github.io**, in Spanish (`/`) and English (`/en/`).
 
-Features:
+## What's on the site
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
+- **Home**: a short introduction, the projects, an about section with TekKnight (my own venture in engineering tools for sword fighting training), the tools I work with, and contact links.
+- **Project pages**, one per project, each with key facts, links, and sections with photos, renders, and videos:
+  - **Master's thesis**: estimating the payload of a semi-autonomous CAT 262C skid-steer loader running ROS, from motion-capture cameras and the torque computed from its control signals.
+  - **TheGame**: a handheld console that started as a Pong on an ATmega328P breadboard and ended up on a custom ATmega32U4 PCB.
+  - **Iron Impact**: a smart striking target for HEMA and combat sports, with reactive LED sensor panels, a universal mount, and a companion app over BLE.
+- **Circuit board background**: the crest at the top left is the starting point of a random PCB drawn behind the page. A new board is laid out on each visit, with component footprints, vias, and traces routed at 90 and 45 degrees. The board grows as you scroll down to each part of the page. Visitors who prefer reduced motion see the full board right away.
 
-## 🚀 Project Structure
+## How it's built
 
-Inside of your Astro project, you'll see the following folders and files:
+The site is built with [Astro](https://astro.build) and deployed to GitHub Pages by the workflow in `.github/workflows/astro.yml` on every push to `main`.
 
 ```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+src/
+├── components/   Layout, home page, and project page templates
+├── i18n/         All text in Spanish and English (content.ts) and the URL helper
+├── pages/        Routes: / and /proyectos/* in Spanish, /en/ and /en/projects/* in English
+└── scripts/      The circuit board background
+    ├── circuit.ts       lays out the random board
+    ├── background.ts    draws it on a canvas and grows it as you scroll
+    └── crest-grid.json  where the crest sits on the board, and its outer pads
+public/
+├── crest.svg     the background crest, vectorized
+└── projects/     project images
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+To add or edit a project, change its text in `src/i18n/content.ts` (both languages) and add a page in `src/pages/proyectos/` and `src/pages/en/projects/`. Put its images in `public/projects/<project>/`.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+The blog pages under `src/pages/blog/` and `src/content/blog/` are leftovers from the Astro blog template and are not linked from the portfolio.
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+## Running it locally
 
-Any static assets, like images, can be placed in the `public/` directory.
+Requires Node.js 22.23.4 or newer.
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+| Command           | Action                                        |
+| :---------------- | :-------------------------------------------- |
+| `npm install`     | Install dependencies                          |
+| `npm run dev`     | Start the dev server at `localhost:4321`      |
+| `npm run build`   | Build the site to `./dist/`                   |
+| `npm run preview` | Preview the build locally                     |
