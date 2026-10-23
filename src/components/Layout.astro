@@ -15,6 +15,9 @@ const site = Astro.site?.origin ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="icon" href={url('/favicon.ico')} sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href={url('/favicon-32.png')} />
+    <link rel="apple-touch-icon" href={url('/apple-touch-icon.png')} />
     <link rel="alternate" hreflang={alt} href={`${site}${url(altHref)}`} />
     <link rel="preload" href={url('/fonts/LibreBaskerville-VariableFont_wght.ttf')} as="font" type="font/ttf" crossorigin />
     <Fragment set:html={`<style>@font-face{font-family:'Libre Baskerville';src:url(${url('/fonts/LibreBaskerville-VariableFont_wght.ttf')}) format('truetype');font-weight:400 700;font-style:normal;font-display:swap}</style>`} />
