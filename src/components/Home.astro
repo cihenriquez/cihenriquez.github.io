@@ -51,7 +51,7 @@ const altHref = lang === 'es' ? '/en/' : '/';
   .hero { padding: 4.5rem 0 3.5rem; }
   .project { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 1.75rem; align-items: center; text-decoration: none; color: inherit; padding: 1.5rem 0; border-bottom: 1px solid var(--trace); }
   .project:not(:has(img)) { grid-template-columns: 1fr; }
-  .project img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid var(--trace); border-radius: 4px; background: var(--deep); }
+  .project img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border: 2px solid var(--trace); border-radius: 4px; background: var(--deep); box-shadow: var(--shadow); }
   .project h3 { text-decoration: underline; text-decoration-color: var(--trace); text-underline-offset: 4px; }
   .project:hover h3, .project:focus-visible h3 { color: var(--accent); text-decoration-color: var(--accent); }
   .project p { margin: 0 0 0.75rem; }
