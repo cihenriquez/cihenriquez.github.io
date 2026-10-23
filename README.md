@@ -11,6 +11,8 @@ Live at **https://cihenriquez.github.io**, in Spanish (`/`) and English (`/en/`)
   - **Master's thesis**: estimating the payload of a semi-autonomous CAT 262C skid-steer loader running ROS, from motion-capture cameras and the torque computed from its control signals.
   - **TheGame**: a handheld console that started as a Pong on an ATmega328P breadboard and ended up on a custom ATmega32U4 PCB.
   - **Iron Impact**: a smart striking target for HEMA and combat sports, with reactive LED sensor panels, a universal mount, and a companion app over BLE.
+  - **Air purification control board**: a redesigned control board, hardware and firmware, for an air purification unit used in car workshops, built to be installed, configured, diagnosed, and updated by technicians in the field.
+  - **3-axis robotic stabilizer**: a gimbal with a BNO055 IMU, an ATmega328P control board, and three PID loops, simulated in Simulink before it was built.
 - **Circuit board background**: the crest at the top left is the starting point of a random PCB drawn behind the page. A new board is laid out on each visit, with component footprints, vias, and traces routed at 90 and 45 degrees. The board grows as you scroll down to each part of the page. Visitors who prefer reduced motion see the full board right away.
 
 ## How it's built

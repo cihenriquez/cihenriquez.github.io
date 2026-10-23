@@ -19,6 +19,9 @@ const img2 = (f: string) => `/projects/tesis/${f}`;
 const DOI = 'https://doi.org/10.7764/tesisUC/ING/110283';
 const img3 = (f: string) => `/projects/iron-impact/${f}`;
 const img = (f: string) => `/projects/thegame/${f}`;
+const img4 = (f: string) => `/projects/purificador/${f}`;
+const img5 = (f: string) => `/projects/estabilizador/${f}`;
+const GIMBAL_VIDEO = 'Rixvificvl4';
 
 export const content = {
   es: {
@@ -56,6 +59,24 @@ export const content = {
         imageAlt: 'Render 3D de la placa Iron Impact V0.1 con un módulo ESP32, dos módulos ADS1115 y ocho entradas jack',
         href: '/proyectos/iron-impact/',
         slug: 'iron-impact',
+      },
+      {
+        title: 'Tarjeta de control para un equipo de purificación de aire',
+        summary: 'Rediseño completo de la tarjeta de control de un equipo de purificación de aire: hardware y firmware nuevos, pensados para que un técnico pueda instalarla, configurarla, diagnosticarla y actualizarla en terreno. Se entregaron 20 kits, que quedaron en pruebas en Chile y México.',
+        tags: ['PIC18F2550', 'C', 'EAGLE', 'UART', 'Bootloader USB'],
+        image: img4('layout.jpg'),
+        imageAlt: 'Render del layout de la tarjeta con el microcontrolador, los optoacopladores, los TRIACs y los conectores de potencia',
+        href: '/proyectos/purificador/',
+        slug: 'purifier',
+      },
+      {
+        title: 'Estabilizador robótico de 3 ejes',
+        summary: 'Un gimbal que mantiene fija la orientación de una cámara mientras la base se mueve en la mano. Lo simulamos en Simulink antes de construirlo; diseñé la placa de control con un ATmega328P, la lectura de la IMU BNO055 y el firmware con tres controladores PID.',
+        tags: ['ATmega328P', 'BNO055', 'PID', 'Simulink', 'EAGLE'],
+        image: img5('structure.jpg'),
+        imageAlt: 'Estructura del estabilizador en madera, con un motor en el brazo superior y dos motores en la base',
+        href: '/proyectos/estabilizador/',
+        slug: 'stabilizer',
       },
     ],
     aboutTitle: 'Sobre mí',
@@ -248,6 +269,111 @@ export const content = {
           },
         ],
       },
+      purifier: {
+        title: 'Tarjeta de control para un equipo de purificación de aire',
+        lead: 'Un proyecto profesional de 2019: rediseñar la electrónica de control de un equipo de purificación de aire usado en talleres automotrices, que genera oxígeno ionizado para eliminar microorganismos y olores. La versión anterior de la placa fallaba en terreno y el cliente necesitaba una placa más robusta, configurable y fácil de diagnosticar, con el diseño completo de hardware y firmware en su poder.',
+        facts: [
+          ['Mi rol', 'Diseño de hardware y firmware, documentación y pruebas'],
+          ['Stack', 'PIC18F2550, C (MPLAB X, XC8), EAGLE'],
+          ['Resultado', '20 kits entregados, en pruebas en Chile y México'],
+        ],
+        sections: [
+          {
+            heading: 'El punto de partida',
+            paragraphs: [
+              'No había documentación del firmware de la placa anterior, así que reconstruí su funcionamiento con pruebas y análisis del circuito. Se alimenta con los 12 V del vehículo, controla con TRIACs y optoacopladores una salida de 220 VAC para la turbina y otra de 110 VAC para la tarjeta de ionización, informa los ciclos a un módem GPRS que además permite bloquear el equipo a distancia, y muestra la cuenta de ciclos en un display de 7 segmentos por I2C.',
+              'De ese análisis salieron las fallas típicas que veía el cliente: ciclos con duración incorrecta, modo de prueba que corría como un ciclo normal y un reinicio del contador que no funcionaba bien. Los requisitos fueron una placa más robusta frente a errores de manipulación, tiempos de funcionamiento configurables según la normativa de cada país, documentación de fabricación, uso y diagnóstico, y 20 kits validados.',
+            ],
+          },
+          {
+            heading: 'Hardware pensado para el técnico',
+            paragraphs: [
+              'Mantuve el PIC18F2550, que sobraba para la tarea y permitía generar también un firmware actualizado para las placas antiguas, y aproveché su USB, que la versión anterior no usaba. El componente que más fallaba según el cliente era el arreglo de transistores ULN2003: revisé el datasheet y las conexiones y el consumo quedaba lejos del límite de 500 mA por canal, así que la causa más probable eran errores al conectar los cables.',
+              'Por eso reemplacé los bloques de borneras atornillables de una pieza, donde había que desatornillar 17 cables para cambiar una placa, por conectores de dos piezas que se enchufan sin tocar el cableado, con distinto número de contactos o paso para que no se puedan intercambiar. Los jumpers de configuración, que los operarios terminaban puenteando con un destornillador, pasaron a ser un menú con un botón y dos LEDs. Agregué LEDs de diagnóstico en la salida del regulador, en las líneas del módem y en los optoacopladores, y escribí un manual con la guía de diagnóstico.',
+            ],
+            figures: [
+              { src: img4('layout.jpg'), alt: 'Render del layout de la tarjeta con el microcontrolador, los optoacopladores, los TRIACs y los conectores de potencia', caption: 'Layout de la nueva tarjeta, diseñado en EAGLE.', wide: true },
+            ],
+          },
+          {
+            heading: 'Un error en el circuito de carga',
+            paragraphs: [
+              'En la primera iteración agregué un cargador para una batería LiPo de respaldo con un MCP73833, con termistor para cortar la carga si la batería se calienta. Faltó separar la batería de la alimentación principal: al conectar la batería y los 12 V a la vez quedaban en corto los 5 V con la batería, y como la batería tiene una impedancia mucho mayor, la corriente se iba al cargador y lo quemaba.',
+              'La solución fue un FDFMA2P853, que integra un MOSFET y un diodo Schottky: el MOSFET conecta la batería solo cuando faltan los 5 V del regulador y el Schottky impide que la corriente vuelva hacia ese nodo, con apenas 0,4 V de caída. En la segunda iteración el microcontrolador además detecta si hay voltaje de entrada, un interruptor DPDT conecta la batería solo cuando hace falta para que no se descargue, y a pedido del cliente se sumó una salida de 12 V con un MOSFET de potencia.',
+            ],
+          },
+          {
+            heading: 'Firmware',
+            paragraphs: [
+              'El firmware está escrito en C con MPLAB X y XC8, sobre una máquina de estados. El tiempo de cada ciclo se mide con una interrupción de timer, con más exactitud que en la versión anterior. El menú de configuración es otra máquina de estados que reemplaza a la principal: con el botón se elige entre cuatro tiempos de funcionamiento (10, 15, 20 o 25 minutos), se activa el modo de prueba, se reinicia el contador o se cambia el modo de comunicación, y todo queda guardado en la EEPROM. El display alterna la cuenta de ciclos con una cuenta regresiva, y sin los 12 V de entrada el microcontrolador entra en modo sleep y despierta con una interrupción.',
+              'El cliente quería configurar los equipos a distancia, así que agregué comunicación serial con el módem GPRS usando el mismo hardware de antes: el relé del módem y un optoacoplador. La salida del optoacoplador invierte la señal y el módulo UART del PIC no puede invertir la trama completa, así que escribí una UART invertida por software con otro timer. El ancho de banda del relé la limita a unos 120 bps. Este modo quedó terminado, pero no alcanzó a probarse en terreno.',
+              'Para actualizar equipos que están fuera del país, cargué un bootloader de las librerías de Microchip, modificado para entrar en modo de actualización con el botón de la placa. Con un cable USB, un computador y la guía del manual, cualquier técnico puede cargar un firmware nuevo.',
+            ],
+          },
+          {
+            heading: 'Resultado',
+            paragraphs: [
+              'Se entregaron 20 kits con su documentación y quedaron en pruebas en Chile y México. Tres presentaron fallas: al menos una por un componente mal soldado, algo esperable con componentes tan pequeños soldados a mano. Si lo hiciera de nuevo, revisaría el costo: con alimentación desde una batería, el filtro Pi y el diodo TVS probablemente están sobredimensionados, y la poca carga de procesamiento permitiría un microcontrolador más barato.',
+            ],
+          },
+        ],
+      },
+      stabilizer: {
+        title: 'Estabilizador robótico de 3 ejes',
+        lead: 'Proyecto del curso Diseño Eléctrico (PUC Chile, 2017), en equipo de dos con Jacob Mellado: un manipulador de tres grados de libertad que, con una sola IMU, mantiene fija la orientación de una cámara o un celular mientras la base se mueve en la mano.',
+        facts: [
+          ['Mi rol', 'Placa de control, firmware y lectura de la IMU; estructura en conjunto'],
+          ['Stack', 'ATmega328P, C, IMU BNO055 (I2C), EAGLE, SolidWorks, Simulink'],
+          ['Estado', 'Prototipo funcional; cumplió parcialmente las especificaciones'],
+        ],
+        sections: [
+          {
+            heading: 'El desafío',
+            paragraphs: [
+              'El estabilizador debía sostener herramientas de hasta 15 × 5 × 10 cm, con un error de orientación que nunca superara los 5° y volviendo a una banda de 1° en menos de un segundo ante cualquier perturbación. Además debía permitir ajustar la orientación de referencia, ser portátil y autocontenido, sin sensores externos alrededor del equipo.',
+            ],
+          },
+          {
+            heading: 'Simular antes de construir',
+            paragraphs: [
+              'Modelamos la estructura en SolidWorks, incluyendo la masa de los motores, y la importamos a Simulink, donde las articulaciones pasan a ser actuadores controlados por torque y se puede medir la orientación en el punto donde iría la IMU. Con ese modelo probamos si bastaba una sola IMU para controlar los tres ejes, con un tope de torque de 0,5 N·m y ruido gaussiano en la medición.',
+              'En la segunda simulación la referencia queda fija y la base recibe torques sinusoidales en los tres ejes, imitando el movimiento de una mano. El video muestra esa simulación.',
+            ],
+            figures: [
+              { src: img5('model.png'), alt: 'Modelo 3D en SolidWorks del estabilizador, con sus dimensiones y la cámara montada en el extremo', caption: 'Modelo de la estructura en SolidWorks.', tall: true },
+              { video: GIMBAL_VIDEO, title: 'Simulación del estabilizador en Simulink', caption: 'Simulación con perturbaciones en la base y la referencia fija.' },
+            ],
+          },
+          {
+            heading: 'Electrónica y control',
+            paragraphs: [
+              'Diseñé la placa de control en torno a un ATmega328P a 16 MHz. Un FT232 permite programarlo por USB y enviar telemetría a un computador, un regulador LM7805 baja los 12 V de la batería NiMH a 5 V, y un traductor de nivel bidireccional conecta el bus I2C de la IMU BNO055, que trabaja a 3,3 V. Dos puentes H L298N mueven los tres motores DC de 12 V.',
+              'El firmware lee los ángulos de Euler y los cuaterniones de la IMU por I2C y ejecuta tres controladores PID, uno por eje, en una interrupción de timer cada 5 ms. La derivada se filtra promediándola con la anterior, y la ganancia integral es relativamente alta porque las perturbaciones de una mano no son escalones: importa más seguir pegado a la referencia que llegar rápido a ella. Presionando un joystick se entra al modo de ajuste, donde los dos joysticks mueven la referencia de cada eje.',
+            ],
+            figures: [
+              { src: img5('control-board.jpg'), alt: 'Placa de control fabricada con el ATmega328P, un módulo FT232, un traductor de nivel y el regulador de voltaje', caption: 'La placa de control fabricada.' },
+              { src: img5('board-layout.png'), alt: 'Layout de la placa de control en EAGLE, de 75 por 41 mm', caption: 'Su layout en EAGLE.' },
+              { src: img5('telemetry.png'), alt: 'Gráficos de telemetría de yaw, roll y pitch medidos contra su referencia, junto a una representación 3D de la orientación', caption: 'Telemetría por USB: cada eje medido contra su referencia, y la orientación de la IMU en 3D.', wide: true },
+            ],
+          },
+          {
+            heading: 'Estructura',
+            paragraphs: [
+              'La estructura es de madera, con piezas impresas en PLA donde la forma era demasiado compleja para hacerla a mano. Imprimirla completa habría tomado demasiado tiempo, y así quedó liviana, rígida y barata: no se deformó ni se trizó con el uso. La electrónica va en carcasas separadas para cambiarla fácilmente si algo falla.',
+            ],
+            figures: [
+              { src: img5('structure.jpg'), alt: 'Estructura del estabilizador en madera durante el armado, con los motores montados', caption: 'La estructura durante el armado.', wide: true },
+            ],
+          },
+          {
+            heading: 'Resultados y lo que aprendí',
+            paragraphs: [
+              'El estabilizador funciona dentro de unos ±90° desde la posición base: con un solo sensor no se puede detectar un cambio de ejes y aparece el bloqueo de cardán. Converge rápido a la referencia y el ajuste con joysticks logra menos de un grado de precisión. La batería alcanza para unos diez minutos de uso continuo.',
+              'Lo que no se cumplió fue la precisión. Los motores DC con reducción tienen un juego mecánico de casi 5° que el controlador no puede corregir, y en el eje yaw el error superó la especificación. El límite estaba en los actuadores, no en el control: la siguiente versión usaría motores brushless sin reducción, como los estabilizadores comerciales, que no cabían en el presupuesto del curso.',
+            ],
+          },
+        ],
+      },
     },
   },
   en: {
@@ -285,6 +411,24 @@ export const content = {
         imageAlt: '3D render of the Iron Impact V0.1 board with an ESP32 module, two ADS1115 modules and eight jack inputs',
         href: '/en/projects/iron-impact/',
         slug: 'iron-impact',
+      },
+      {
+        title: 'Control board for an air purification unit',
+        summary: 'A complete redesign of the control board of an air purification unit: new hardware and firmware, designed so a technician can install, configure, diagnose and update it in the field. 20 kits were delivered and went into testing in Chile and Mexico.',
+        tags: ['PIC18F2550', 'C', 'EAGLE', 'UART', 'USB bootloader'],
+        image: img4('layout.jpg'),
+        imageAlt: 'Layout render of the board with the microcontroller, optocouplers, TRIACs and power connectors',
+        href: '/en/projects/air-purifier/',
+        slug: 'purifier',
+      },
+      {
+        title: '3-axis robotic stabilizer',
+        summary: 'A gimbal that keeps a camera at a fixed orientation while its base moves in your hand. We simulated it in Simulink before building it; I designed the ATmega328P control board, the BNO055 IMU readout and the firmware with three PID controllers.',
+        tags: ['ATmega328P', 'BNO055', 'PID', 'Simulink', 'EAGLE'],
+        image: img5('structure.jpg'),
+        imageAlt: 'Wooden frame of the stabilizer, with one motor on the upper arm and two motors on the base',
+        href: '/en/projects/stabilizer/',
+        slug: 'stabilizer',
       },
     ],
     aboutTitle: 'About me',
@@ -473,6 +617,111 @@ export const content = {
               { src: img('pcb-front.png'), alt: '3D render of the TheGame front side: TFT screen, D-pad, A, B, START and reset buttons', caption: 'Front: screen, D-pad, A, B, START, reset and power.' },
               { src: img('pcb-back.png'), alt: '3D render of the TheGame back side: microcontroller, battery holder, micro-USB and ICSP header', caption: 'Back: microcontroller, battery holder, micro-USB and ICSP.' },
               { src: img('schematic.png'), alt: 'TheGame Rev 0.1 schematic split into blocks: voltage selector and step-up, power switch, buttons, reset, microcontroller, TFT and USB', caption: 'Revision 0.1 schematic, organized in blocks.', wide: true },
+            ],
+          },
+        ],
+      },
+      purifier: {
+        title: 'Control board for an air purification unit',
+        lead: 'A professional project from 2019: redesigning the control electronics of an air purification unit used in car workshops, which produces ionized oxygen to remove microorganisms and odors. The previous version of the board was failing in the field, and the client needed a board that was more robust, configurable and easy to diagnose, and to own the full hardware and firmware design.',
+        facts: [
+          ['My role', 'Hardware and firmware design, documentation and testing'],
+          ['Stack', 'PIC18F2550, C (MPLAB X, XC8), EAGLE'],
+          ['Outcome', '20 kits delivered, in testing in Chile and Mexico'],
+        ],
+        sections: [
+          {
+            heading: 'The starting point',
+            paragraphs: [
+              'There was no documentation for the previous board\'s firmware, so I reconstructed how it worked through tests and circuit analysis. It runs on the vehicle\'s 12 V, uses TRIACs and optocouplers to switch a 220 VAC output for the blower and a 110 VAC output for the ionization board, reports cycles to a GPRS modem that can also lock the unit remotely, and shows the cycle count on a 7-segment display over I2C.',
+              'That analysis surfaced the failures the client kept seeing: cycles with the wrong duration, a test mode that ran as a normal cycle, and a counter reset that did not work properly. The requirements were a board that tolerates handling mistakes, run times configurable to each country\'s regulations, documentation for manufacturing, use and diagnosis, and 20 validated kits.',
+            ],
+          },
+          {
+            heading: 'Hardware designed for the technician',
+            paragraphs: [
+              'I kept the PIC18F2550: it was more than enough for the job and made it possible to build updated firmware for the old boards too, and I used its USB port, which the old version ignored. According to the client, the part that failed most was the ULN2003 transistor array. Checking the datasheet and the connections, the load was far below its 500 mA per channel, so the likely cause was wiring mistakes.',
+              'So I replaced the one-piece screw terminal blocks, where swapping a board meant unscrewing 17 wires, with two-piece pluggable connectors that come off without touching the wiring, each with a different pin count or pitch so they cannot be swapped. The configuration jumpers, which operators ended up bridging with a screwdriver, became a menu driven by one button and two LEDs. I added diagnostic LEDs on the regulator output, the modem lines and the optocouplers, and wrote a manual with a troubleshooting guide.',
+            ],
+            figures: [
+              { src: img4('layout.jpg'), alt: 'Layout render of the board with the microcontroller, optocouplers, TRIACs and power connectors', caption: 'The new board layout, designed in EAGLE.', wide: true },
+            ],
+          },
+          {
+            heading: 'A mistake in the charging circuit',
+            paragraphs: [
+              'In the first iteration I added a charger for a backup LiPo battery with an MCP73833, with a thermistor that stops charging if the battery gets hot. I missed isolating the battery from the main supply: with the battery and the 12 V both connected, the 5 V rail was shorted to the battery, and since the battery has a much higher impedance, the current went into the charger and burned it.',
+              'The fix was an FDFMA2P853, which combines a MOSFET and a Schottky diode: the MOSFET connects the battery only when the regulator\'s 5 V is missing, and the Schottky keeps current from flowing back into that node, with only a 0.4 V drop. In the second iteration the microcontroller also senses the input voltage, a DPDT switch connects the battery only when needed so it does not drain, and at the client\'s request I added a 12 V output driven by a power MOSFET.',
+            ],
+          },
+          {
+            heading: 'Firmware',
+            paragraphs: [
+              'The firmware is written in C with MPLAB X and XC8, around a state machine. Cycle times are measured with a timer interrupt, more accurately than in the previous version. The configuration menu is a second state machine that takes over from the main one: with the button you choose one of four run times (10, 15, 20 or 25 minutes), enable test mode, reset the counter or change the communication mode, and everything is stored in EEPROM. The display alternates the cycle count with a countdown, and without the 12 V input the microcontroller goes to sleep and wakes on an interrupt.',
+              'The client wanted to configure units remotely, so I added serial communication with the GPRS modem over the existing hardware: the modem\'s relay and an optocoupler. The optocoupler output inverts the signal, and the PIC\'s UART cannot invert the whole frame, so I wrote an inverted software UART on another timer. The relay\'s bandwidth limits it to about 120 bps. This mode was finished but was not tested in the field.',
+              'To update units outside the country, I loaded a bootloader from Microchip\'s libraries, modified to enter update mode with the board\'s button. With a USB cable, a computer and the guide in the manual, any technician can load new firmware.',
+            ],
+          },
+          {
+            heading: 'Outcome',
+            paragraphs: [
+              'Twenty kits were delivered with their documentation and went into testing in Chile and Mexico. Three had faults, at least one from a badly soldered part, which is expected with components this small soldered by hand. If I did it again I would look at cost: with a battery as the supply, the Pi filter and the TVS diode are probably oversized, and the light processing load would allow a cheaper microcontroller.',
+            ],
+          },
+        ],
+      },
+      stabilizer: {
+        title: '3-axis robotic stabilizer',
+        lead: 'A project for the Electrical Design course (PUC Chile, 2017), built in a team of two with Jacob Mellado: a three-degree-of-freedom manipulator that uses a single IMU to keep a camera or phone at a fixed orientation while its base moves in your hand.',
+        facts: [
+          ['My role', 'Control board, firmware and IMU readout; frame built together'],
+          ['Stack', 'ATmega328P, C, BNO055 IMU (I2C), EAGLE, SolidWorks, Simulink'],
+          ['Status', 'Working prototype; partly met the specifications'],
+        ],
+        sections: [
+          {
+            heading: 'The challenge',
+            paragraphs: [
+              'The stabilizer had to hold tools up to 15 × 5 × 10 cm, with an orientation error never above 5°, returning to within 1° in under a second after any disturbance. It also needed a way to adjust the reference orientation, and had to be portable and self-contained, with no external sensors around it.',
+            ],
+          },
+          {
+            heading: 'Simulate before building',
+            paragraphs: [
+              'We modeled the frame in SolidWorks, including the motors\' mass, and imported it into Simulink, where the joints become torque-controlled actuators and the orientation can be measured where the IMU would sit. With that model we checked whether a single IMU was enough to control all three axes, with a 0.5 N·m torque limit and Gaussian noise on the measurement.',
+              'In the second simulation the reference stays fixed while the base gets sinusoidal torques on all three axes, mimicking a moving hand. The video shows that simulation.',
+            ],
+            figures: [
+              { src: img5('model.png'), alt: 'SolidWorks 3D model of the stabilizer, with dimensions and the camera mounted at the end', caption: 'The frame model in SolidWorks.', tall: true },
+              { video: GIMBAL_VIDEO, title: 'Simulink simulation of the stabilizer', caption: 'Simulation with disturbances at the base and a fixed reference.' },
+            ],
+          },
+          {
+            heading: 'Electronics and control',
+            paragraphs: [
+              'I designed the control board around an ATmega328P at 16 MHz. An FT232 lets it be programmed over USB and send telemetry to a computer, an LM7805 regulator brings the 12 V NiMH battery down to 5 V, and a bidirectional level shifter connects the I2C bus of the BNO055 IMU, which runs at 3.3 V. Two L298N H-bridges drive the three 12 V DC motors.',
+              'The firmware reads Euler angles and quaternions from the IMU over I2C and runs three PID controllers, one per axis, in a timer interrupt every 5 ms. The derivative is filtered by averaging it with the previous one, and the integral gain is fairly high because a hand does not produce step disturbances: staying close to the reference matters more than reaching it quickly. Pressing a joystick enters adjustment mode, where the two joysticks move the reference of each axis.',
+            ],
+            figures: [
+              { src: img5('control-board.jpg'), alt: 'Fabricated control board with the ATmega328P, an FT232 module, a level shifter and the voltage regulator', caption: 'The fabricated control board.' },
+              { src: img5('board-layout.png'), alt: 'EAGLE layout of the 75 by 41 mm control board', caption: 'Its layout in EAGLE.' },
+              { src: img5('telemetry.png'), alt: 'Telemetry plots of measured yaw, roll and pitch against their references, next to a 3D view of the orientation', caption: 'USB telemetry: each axis measured against its reference, and the IMU orientation in 3D.', wide: true },
+            ],
+          },
+          {
+            heading: 'Frame',
+            paragraphs: [
+              'The frame is wood, with PLA printed parts where the shape was too complex to make by hand. Printing the whole thing would have taken too long, and this way it stayed light, stiff and cheap: it neither bent nor cracked in use. The electronics sit in separate enclosures so a failed part is easy to swap.',
+            ],
+            figures: [
+              { src: img5('structure.jpg'), alt: 'Wooden frame of the stabilizer during assembly, with the motors mounted', caption: 'The frame during assembly.', wide: true },
+            ],
+          },
+          {
+            heading: 'Results and lessons',
+            paragraphs: [
+              'The stabilizer works within about ±90° of its base position: with a single sensor a change of axes cannot be detected, and gimbal lock appears. It converges quickly to the reference, and joystick adjustment reaches better than one degree. The battery lasts about ten minutes of continuous use.',
+              'What fell short was precision. The geared DC motors have almost 5° of backlash that the controller cannot correct, and on the yaw axis the error exceeded the spec. The limit was the actuators, not the control: the next version would use gearless brushless motors, like commercial stabilizers, which did not fit the course budget.',
             ],
           },
         ],
