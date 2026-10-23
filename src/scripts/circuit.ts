@@ -8,6 +8,7 @@ const CREST_HEIGHT = 1212;
 export const G = 14; // grid step; the crest grid in crest-grid.json uses the same step
 const DIRS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
 const BLOCK = 22; // components and vias are scattered one block at a time
+const MIN_RUN = 3; // cells a trace keeps its heading before it may turn again
 
 // Every trace and shape carries `root`, the page height where its source sits, and `t`,
 // the growth round it appears at. The renderer reveals them as the reader scrolls there.
@@ -82,7 +83,7 @@ export function circuit(width: number, height: number, seed: number): Board {
   let active: Grower[] = [];
 
   const grow = (g: Omit<Grower, 'id' | 'run' | 'jog' | 'len' | 'cells' | 'forks'>) => {
-    const t: Grower = { ...g, id: parentOf.length, run: 0, jog: 0, len: 0, cells: [], forks: [] };
+    const t: Grower = { ...g, id: parentOf.length, run: 0, jog: MIN_RUN, len: 0, cells: [], forks: [] };
     parentOf.push(t.parent);
     lenOf.push(0);
     claim(t.x, t.y, t.id);
@@ -124,6 +125,16 @@ export function circuit(width: number, height: number, seed: number): Board {
     return true;
   };
 
+  // True when the trace's last straight stretch is a single cell after a turn.
+  const shortTail = (t: Grower) => {
+    const c = t.cells;
+    const n = c.length;
+    if (n < 6) return false;
+    const pi = n >= 9 ? c[n - 9] : Math.round(t.pts[t.pts.length - 3] / G - 0.5);
+    const pj = n >= 9 ? c[n - 8] : Math.round(t.pts[t.pts.length - 2] / G - 0.5);
+    return c[n - 3] - c[n - 6] !== c[n - 6] - pi || c[n - 2] - c[n - 5] !== c[n - 5] - pj;
+  };
+
   const ended: Grower[] = [];
   // Components and vias, kept only if at least one of their traces survives.
   const sources: { shapes: Shape[]; ids: number[] }[] = [];
@@ -142,7 +153,7 @@ export function circuit(width: number, height: number, seed: number): Board {
     let fork = 0;
     for (let k = 0; k < t.forks.length; k += 2) if (alive.has(t.forks[k + 1])) fork = t.forks[k];
     if (end !== 'edge') {
-      while (!room(t, 1) && t.cells.length > fork) {
+      while ((!room(t, 1) || shortTail(t)) && t.cells.length > fork) {
         const n = t.cells.length;
         owner[t.cells[n - 2] * cols + t.cells[n - 3]] = 0;
         t.cells.length = n - 3;
@@ -318,16 +329,13 @@ export function circuit(width: number, height: number, seed: number): Board {
     const source = { shapes: [{ kind: 'via', x: center(i), y: center(j), t: 0, root }] as Shape[], ids: [] as number[] };
     sources.push(source);
     block(i - 1, j - 1, i + 1, j + 1);
-    const first = Math.floor(rand() * 8);
-    const count = 1 + Math.floor(rand() * 3);
-    for (let k = 0; k < count; k++) {
-      const dir = wrap(first + k * (2 + Math.floor(rand() * 2)));
-      owner[(j + DIRS[dir][1]) * cols + i + DIRS[dir][0]] = 0;
-      const pts = [center(i), center(j), 0, center(i + DIRS[dir][0]), center(j + DIRS[dir][1]), 1];
-      const t = grow({ parent: 0, x: i + DIRS[dir][0], y: j + DIRS[dir][1], dir, pref: dir, base: dir, grace: 1, w: 6, at: 1, root, rand: random(hash(seed, key, k)), pts });
-      source.ids.push(t.id);
-      active.push(t);
-    }
+    // One trace per via, so a via never sits in the middle of a trace or a junction.
+    const dir = Math.floor(rand() * 8);
+    owner[(j + DIRS[dir][1]) * cols + i + DIRS[dir][0]] = 0;
+    const pts = [center(i), center(j), 0, center(i + DIRS[dir][0]), center(j + DIRS[dir][1]), 1];
+    const t = grow({ parent: 0, x: i + DIRS[dir][0], y: j + DIRS[dir][1], dir, pref: dir, base: dir, grace: 1, w: 6, at: 1, root, rand: random(hash(seed, key)), pts });
+    source.ids.push(t.id);
+    active.push(t);
   };
 
   for (let bj = 0; bj * BLOCK < rows; bj++)
@@ -361,7 +369,7 @@ export function circuit(width: number, height: number, seed: number): Board {
       const { dir: d, pref: p, rand } = t;
       const order: number[] = [];
       if (d !== p && t.run >= t.jog) order.push(p);
-      else if (d === p && t.run >= 2) {
+      else if (d === p && t.run >= MIN_RUN) {
         let turn = 0;
         if (t.group) {
           if (!t.group.plan.has(round)) t.group.plan.set(round, decide(t.group.rand, p % 2 === 1));
@@ -373,24 +381,27 @@ export function circuit(width: number, height: number, seed: number): Board {
           order.push(t.pref);
         } else if (Math.abs(turn) === 1) {
           order.push(wrap(p + turn));
-          t.jog = 1 + Math.floor(rand() * 4);
+          t.jog = MIN_RUN + (t.group ? (round * 7) % 3 : Math.floor(rand() * 3));
         } else if (turn && diff(p + turn, t.base) <= 2) {
           order.push(wrap(p + turn / 2));
           t.pref = wrap(p + turn);
-          t.jog = 1 + Math.floor(rand() * 2);
+          t.jog = 2 + (t.group ? round % 2 : Math.floor(rand() * 2));
         }
       }
       order.push(d);
-      for (const c of rand() < 0.5 ? [p, p + 1, p - 1] : [p, p - 1, p + 1]) if (!order.includes(wrap(c))) order.push(wrap(c));
+      if (t.run >= MIN_RUN) for (const c of rand() < 0.5 ? [p, p + 1, p - 1] : [p, p - 1, p + 1]) if (!order.includes(wrap(c))) order.push(wrap(c));
 
       let moved = false;
       for (const c of order) {
         const i = t.x + DIRS[c][0];
         const j = t.y + DIRS[c][1];
         if (!inside(i, j)) {
-          t.cells.push(i, j, round);
-          t.x = i;
-          t.y = j;
+          // Leave the page straight ahead, never on a last-moment turn.
+          const [si, sj] = [t.x + DIRS[t.dir][0], t.y + DIRS[t.dir][1]];
+          if (inside(si, sj)) continue;
+          t.cells.push(si, sj, round);
+          t.x = si;
+          t.y = sj;
           finish(t, 'edge');
           moved = true;
           break;
@@ -429,7 +440,7 @@ export function circuit(width: number, height: number, seed: number): Board {
         if (diff(b, t.base) <= 2 && inside(i, j) && at(i, j) === 0) {
           const pts = [center(t.x), center(t.y), t.at];
           const child = grow({ parent: t.id, x: t.x, y: t.y, dir: b, pref: wrap(t.dir + side), base: t.base, grace: 0, w: t.w, at: t.at, root: t.root, rand: random(Math.floor(rand() * 2 ** 32)), pts });
-          child.jog = 1 + Math.floor(rand() * 3);
+          child.jog = MIN_RUN + Math.floor(rand() * 2);
           t.forks.push(t.cells.length, child.id);
           next.push(child);
         }
