@@ -21,6 +21,7 @@ const img3 = (f: string) => `/projects/iron-impact/${f}`;
 const img = (f: string) => `/projects/thegame/${f}`;
 const img4 = (f: string) => `/projects/purificador/${f}`;
 const img5 = (f: string) => `/projects/estabilizador/${f}`;
+const img6 = (f: string) => `/projects/posicionador/${f}`;
 const GIMBAL_VIDEO = 'Rixvificvl4';
 
 export const content = {
@@ -60,6 +61,16 @@ export const content = {
         imageAlt: 'Render 3D de la placa Iron Impact V0.1 con un módulo ESP32, dos módulos ADS1115 y ocho entradas jack',
         href: '/proyectos/iron-impact/',
         slug: 'iron-impact',
+      },
+      {
+        title: 'Posicionador de 4 ejes para medir antenas de ondas milimétricas',
+        summary: 'Electrónica y software de control de un robot que mueve una fuente y un detector para medir el patrón de haz de fuentes de ondas milimétricas en el Centro de Astro-Ingeniería UC: firmware de motores paso a paso comandado por SPI desde una BeagleBone y barridos de medición automatizados con un analizador de espectro.',
+        tags: ['ATmega328P', 'DRV8825', 'SPI', 'BeagleBone', 'Python', 'SCPI'],
+        image: img6('robot.jpg'),
+        imageAlt: 'Posicionador con un eje vertical y una etapa rotatoria dentro de una jaula anecoica, junto a un analizador de espectro',
+        href: '/proyectos/posicionador/',
+        slug: 'positioner',
+        other: true,
       },
       {
         title: 'TheGame: de un Pong en protoboard a una consola en PCB',
@@ -325,6 +336,41 @@ export const content = {
           },
         ],
       },
+      positioner: {
+        title: 'Posicionador de 4 ejes para medir antenas de ondas milimétricas',
+        lead: 'Mi trabajo como asistente técnico en el Centro de Astro-Ingeniería UC (2016–2018): la electrónica y el software de control de un posicionador de 4 ejes que mueve una fuente y un detector para medir el patrón de haz de fuentes de ondas milimétricas en el Laboratorio de Radiofrecuencias.',
+        facts: [
+          ['Mi rol', 'Electrónica de control, firmware de motores y scripts de medición'],
+          ['Stack', 'ATmega328P, DRV8825, BeagleBone, SPI, Python, SCPI'],
+          ['Contexto', 'Centro de Astro-Ingeniería UC, 2016–2018'],
+        ],
+        sections: [
+          {
+            heading: 'El sistema',
+            paragraphs: [
+              'El posicionador tiene cuatro ejes: X e Y lineales, y dos rotaciones, φ, donde va montado el detector, y θ, donde va la fuente. Una BeagleBone corre los scripts en Python y envía órdenes por SPI a un microcontrolador que mueve los cuatro motores paso a paso.',
+            ],
+            figures: [
+              { src: img6('robot.jpg'), alt: 'Posicionador con un eje vertical y una etapa rotatoria dentro de una jaula anecoica, junto a un analizador de espectro y una fuente de poder', caption: 'El posicionador en la jaula anecoica del Laboratorio de Radiofrecuencias del AIUC. Foto actual: el sistema siguió evolucionando después de mi periodo.', wide: true },
+              { src: img6('diagram-es.svg'), alt: 'Diagrama: la BeagleBone envía órdenes por SPI al ATmega328P y consulta el analizador de espectro por SCPI; el ATmega328P recibe los finales de carrera por interrupciones y mueve cuatro drivers DRV8825 que controlan los ejes X, Y, φ y θ', caption: 'Arquitectura del sistema.', wide: true },
+            ],
+          },
+          {
+            heading: 'Firmware de los motores',
+            paragraphs: [
+              'El microcontrolador (un ATmega328P) funciona como esclavo SPI con un protocolo simple: un byte de sincronización con su confirmación, seguido del eje y un entero de 32 bits con los pasos. Maneja cuatro drivers DRV8825 con micropasos de 1/32 y rampas lineales de aceleración y desaceleración.',
+              'Los ejes lineales tienen finales de carrera en ambos extremos, leídos con interrupciones de cambio de pin que detienen el motor si se alcanza un límite. Para fijar el cero, cada eje se acerca rápido en pasos completos hasta tocar el final de carrera y luego retrocede con micropasos hasta liberarlo.',
+            ],
+          },
+          {
+            heading: 'Medición automatizada',
+            paragraphs: [
+              'En la BeagleBone, una capa en Python modela cada eje como lineal o rotacional, convierte milímetros y grados a pasos, guarda la posición en disco para recuperarla entre sesiones y calcula el ángulo necesario para apuntar a un punto.',
+              'Para medir el haz, el script ubica el pico de la fuente cerca de 145 GHz en un analizador de espectro Keysight N9020B, controlado por SCPI, y luego barre θ de 0° a 10° en pasos de 0,5°, registrando la potencia en cada posición.',
+            ],
+          },
+        ],
+      },
       stabilizer: {
         title: 'Estabilizador robótico de 3 ejes',
         lead: 'Proyecto del curso Diseño Eléctrico (PUC Chile, 2017), en equipo de dos con Jacob Mellado: un manipulador de tres grados de libertad que, con una sola IMU, mantiene fija la orientación de una cámara o un celular mientras la base se mueve en la mano.',
@@ -419,6 +465,16 @@ export const content = {
         imageAlt: '3D render of the Iron Impact V0.1 board with an ESP32 module, two ADS1115 modules and eight jack inputs',
         href: '/en/projects/iron-impact/',
         slug: 'iron-impact',
+      },
+      {
+        title: '4-axis positioner for measuring millimeter-wave antennas',
+        summary: 'Control electronics and software for a robot that moves a source and a detector to measure the beam pattern of millimeter-wave sources at the UC Center for Astro-Engineering: stepper-motor firmware commanded over SPI from a BeagleBone, and automated measurement sweeps with a spectrum analyzer.',
+        tags: ['ATmega328P', 'DRV8825', 'SPI', 'BeagleBone', 'Python', 'SCPI'],
+        image: img6('robot.jpg'),
+        imageAlt: 'Positioner with a vertical axis and a rotary stage inside an anechoic enclosure, next to a spectrum analyzer',
+        href: '/en/projects/positioner/',
+        slug: 'positioner',
+        other: true,
       },
       {
         title: 'TheGame: from a breadboard Pong to a handheld console on a PCB',
@@ -680,6 +736,41 @@ export const content = {
             ],
             figures: [
               { src: img4('board-running.jpg'), alt: 'The control board installed in the unit, with diagnostic LEDs lit, pluggable connectors and the LCD display attached', caption: 'One of the boards running in the unit, with the diagnostic LEDs lit and the display attached.', tall: true },
+            ],
+          },
+        ],
+      },
+      positioner: {
+        title: '4-axis positioner for measuring millimeter-wave antennas',
+        lead: 'My work as a technical assistant at the UC Center for Astro-Engineering (2016–2018): the control electronics and software of a 4-axis positioner that moves a source and a detector to measure the beam pattern of millimeter-wave sources in the Radio Frequency Laboratory.',
+        facts: [
+          ['My role', 'Control electronics, motor firmware and measurement scripts'],
+          ['Stack', 'ATmega328P, DRV8825, BeagleBone, SPI, Python, SCPI'],
+          ['Context', 'UC Center for Astro-Engineering, 2016–2018'],
+        ],
+        sections: [
+          {
+            heading: 'The system',
+            paragraphs: [
+              'The positioner has four axes: linear X and Y, and two rotations, φ, which carries the detector, and θ, which carries the source. A BeagleBone runs the Python scripts and sends commands over SPI to a microcontroller that drives the four stepper motors.',
+            ],
+            figures: [
+              { src: img6('robot.jpg'), alt: 'Positioner with a vertical axis and a rotary stage inside an anechoic enclosure, next to a spectrum analyzer and a power supply', caption: 'The positioner in the anechoic enclosure of the AIUC Radio Frequency Laboratory. Current photo: the system kept evolving after my time there.', wide: true },
+              { src: img6('diagram-en.svg'), alt: 'Diagram: the BeagleBone sends commands over SPI to the ATmega328P and queries the spectrum analyzer over SCPI; the ATmega328P reads the limit switches through interrupts and drives four DRV8825 drivers that move the X, Y, φ and θ axes', caption: 'System architecture.', wide: true },
+            ],
+          },
+          {
+            heading: 'Motor firmware',
+            paragraphs: [
+              'The microcontroller (an ATmega328P) acts as an SPI slave with a simple protocol: a sync byte and its acknowledgement, followed by the axis and a 32-bit integer with the steps. It drives four DRV8825 drivers with 1/32 microstepping and linear acceleration and deceleration ramps.',
+              'The linear axes have limit switches at both ends, read through pin-change interrupts that stop the motor if a limit is reached. To set zero, each axis approaches quickly in full steps until it hits the switch, then backs off in microsteps until it releases it.',
+            ],
+          },
+          {
+            heading: 'Automated measurement',
+            paragraphs: [
+              'On the BeagleBone, a Python layer models each axis as linear or rotational, converts millimeters and degrees to steps, saves the position to disk so it survives between sessions, and computes the angle needed to aim at a point.',
+              'To measure the beam, the script finds the source peak near 145 GHz on a Keysight N9020B spectrum analyzer, controlled over SCPI, then sweeps θ from 0° to 10° in 0.5° steps, logging the power at each position.',
             ],
           },
         ],
