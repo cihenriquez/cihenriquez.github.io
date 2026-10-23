@@ -16,8 +16,11 @@ const site = Astro.site?.origin ?? '';
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="alternate" hreflang={alt} href={`${site}${url(altHref)}`} />
+    <link rel="preload" href={url('/fonts/LibreBaskerville-VariableFont_wght.ttf')} as="font" type="font/ttf" crossorigin />
+    <Fragment set:html={`<style>@font-face{font-family:'Libre Baskerville';src:url(${url('/fonts/LibreBaskerville-VariableFont_wght.ttf')}) format('truetype');font-weight:400 700;font-style:normal;font-display:swap}</style>`} />
   </head>
   <body>
+    <img class="crest" src={url('/crest.png')} alt="" aria-hidden="true" decoding="async" />
     <div class="wrap">
       <header class="top">
         <a class="brand" href={url(homeHref)}>{t.name}</a>
@@ -39,19 +42,21 @@ const site = Astro.site?.origin ?? '';
 </html>
 
 <style is:global>
-  :root { --board: #0f3a2e; --deep: #0a2a21; --ink: #eaf1e8; --muted: #a3bcb0; --gold: #e3bd5c; --trace: #2a5a4b; color-scheme: dark; }
+  :root { --paper: #ffffff; --paper-end: #e3e6e9; --deep: #eef0f2; --ink: #17212b; --muted: #55616d; --accent: #0f5a43; --trace: #c6ccd2; --font: 'Libre Baskerville', Georgia, 'Times New Roman', serif; color-scheme: light; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--board); color: var(--ink); font: 1.05rem/1.65 system-ui, -apple-system, 'Segoe UI', sans-serif; }
-  .wrap { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+  html { background: var(--paper-end); }
+  body { margin: 0; position: relative; overflow-x: hidden; min-height: 100vh; background: linear-gradient(180deg, var(--paper) 0%, var(--paper-end) 100%); color: var(--ink); font: 0.98rem/1.75 var(--font); }
+  .crest { position: absolute; top: 0; left: 0; width: 50vw; min-width: 16rem; height: auto; opacity: 0.05; mix-blend-mode: multiply; pointer-events: none; user-select: none; z-index: 0; }
+  .wrap { position: relative; z-index: 1; max-width: 56rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
   a { color: var(--ink); text-underline-offset: 3px; }
-  a:hover { color: var(--gold); }
-  a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  a:hover { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .brand { font-weight: 700; text-decoration: none; }
-  h1 { font-size: clamp(1.9rem, 5.2vw, 3.3rem); line-height: 1.12; letter-spacing: -0.02em; margin: 0; max-width: 22ch; }
-  h2 { font-size: 1.25rem; margin: 0 0 1.25rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--trace); }
-  h3 { margin: 0 0 0.5rem; font-size: 1.35rem; line-height: 1.25; }
-  .meta, .tags { font: 0.85rem ui-monospace, 'SF Mono', Consolas, monospace; color: var(--muted); }
+  h1 { font-size: clamp(1.7rem, 4.4vw, 2.7rem); line-height: 1.2; letter-spacing: 0; margin: 0; max-width: 22ch; }
+  h2 { font-size: 1.15rem; margin: 0 0 1.25rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--trace); }
+  h3 { margin: 0 0 0.5rem; font-size: 1.2rem; line-height: 1.35; }
+  .meta, .tags { font: 0.8rem/1.6 var(--font); color: var(--muted); }
   .links { list-style: none; padding: 0; margin: 0 0 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
   footer { margin-top: 5rem; }
 </style>

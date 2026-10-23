@@ -5,10 +5,19 @@ export const links = {
   linkedin: 'https://www.linkedin.com/in/cihenriquez',
   github: 'https://github.com/cihenriquez',
   tekknight: 'https://tekknight.io',
+  tiktok: 'https://www.tiktok.com/@tekknighttools',
+  instagram: 'https://www.instagram.com/tekknighttools/',
 };
+
+const tkLinks = [
+  ['tekknight.io', links.tekknight],
+  ['TikTok', links.tiktok],
+  ['Instagram', links.instagram],
+];
 
 const img2 = (f: string) => `/projects/tesis/${f}`;
 const DOI = 'https://doi.org/10.7764/tesisUC/ING/110283';
+const img3 = (f: string) => `/projects/iron-impact/${f}`;
 const img = (f: string) => `/projects/thegame/${f}`;
 
 export const content = {
@@ -40,18 +49,26 @@ export const content = {
         slug: 'thegame',
       },
       {
-        title: 'Iron Impact',
-        summary: 'Hardware de entrenamiento inteligente para artes marciales, con sensores piezoeléctricos y espuma EVA de alta densidad. La arquitectura pasó de ESP32 a nRF52840 para bajar el consumo y transmitir telemetría BLE de baja latencia.',
-        tags: ['nRF52840', 'ESP32', 'BLE', 'Sensores piezoeléctricos'],
-        href: links.tekknight,
-        cta: 'Ver en tekknight.io',
+        title: 'Iron Impact: blanco de entrenamiento inteligente',
+        summary: 'Blanco de entrenamiento inteligente para HEMA, buhurt, kendo, esgrima y deportes de combate, con placas de sensores con LEDs reactivos, montaje universal y una app móvil. La arquitectura pasó de ESP32 a nRF52840 para bajar el consumo y transmitir telemetría BLE de baja latencia.',
+        tags: ['ESP32', 'nRF52840', 'BLE', 'ADS1115', 'PCB'],
+        image: img3('pcb-v01.jpg'),
+        imageAlt: 'Render 3D de la placa Iron Impact V0.1 con un módulo ESP32, dos módulos ADS1115 y ocho entradas jack',
+        href: '/proyectos/iron-impact/',
+        slug: 'iron-impact',
       },
     ],
     aboutTitle: 'Sobre mí',
     about: [
-      'Soy ingeniero eléctrico y electrónico (MSc, PUC Chile) con foco en robótica y sistemas embebidos. Desde 2022 trabajo en Zippedi: validé y manufacturé el hardware de una flota de 20 robots en 3 países de LATAM, llevé equipos a certificación FCC y desarrollé firmware FreeRTOS para MSPM0.',
-      'TekKnight es mi proyecto propio, donde diseño hardware y firmware de producto.',
+      'Soy ingeniero eléctrico y electrónico (MSc, PUC Chile) con foco en robótica y sistemas embebidos. Trabajo en Zippedi como Electrical Hardware Engineer. Zippedi fabrica un robot autónomo que recorre tiendas y escanea las góndolas con cámaras para detectar productos agotados y errores de precios.',
     ],
+    tekknight: {
+      name: 'TekKnight',
+      tagline: 'Old Arts. Modern Tools',
+      description: 'Herramientas de ingeniería para el entrenamiento de combate con espada. Es mi emprendimiento, donde diseño el hardware y el firmware.',
+      logoAlt: 'Logo de TekKnight: un casco de caballero con detalles rojos luminosos',
+      links: tkLinks,
+    },
     skillsTitle: 'Con qué trabajo',
     skills: [
       ['Firmware', 'C, C++, Python, FreeRTOS, ESP32, nRF52840, MSPM0'],
@@ -64,6 +81,67 @@ export const content = {
     switchTo: 'English',
     back: 'Volver a proyectos',
     pages: {
+      'iron-impact': {
+        title: 'Iron Impact: el blanco de entrenamiento inteligente de nueva generación',
+        lead: 'Iron Impact es un blanco de entrenamiento inteligente para HEMA, buhurt, kendo, esgrima y deportes de combate, con métricas de impacto en tiempo real: el blanco que devuelve el golpe con datos. Lo desarrollo en TekKnight, donde diseño el hardware y el firmware.',
+        facts: [
+          ['Mi rol', 'Diseño de hardware y firmware (Lead Hardware Engineer en TekKnight)'],
+          ['Stack', 'ESP32, nRF52840, ADS1115, BLE, OTA'],
+          ['Estado', 'PCB V0.1 y soporte «Universal» para neumáticos, ambos en fase de prototipo; la arquitectura evolucionó después hacia el nRF52840'],
+        ],
+        links: [['Ver TekKnight', 'https://tekknight.io']],
+        sections: [
+          {
+            heading: 'El producto',
+            paragraphs: [
+              'Iron Impact combina sensores piezoeléctricos con espuma EVA de alta densidad. Diseñé el hardware y el firmware y los he ido iterando: la primera arquitectura usaba un ESP32, y después migré a un nRF52840 para bajar el consumo y transmitir telemetría BLE de baja latencia.',
+            ],
+            figures: [
+              { video: 'cCJvmzllVtA', title: 'Iron Impact: Field testing', caption: 'Video de las pruebas en terreno de Iron Impact.', wide: true },
+            ],
+          },
+          {
+            heading: 'Placas de sensores con LEDs reactivos',
+            paragraphs: [
+              'El blanco se compone de ocho segmentos con sensores y LEDs reactivos, montados en un neumático. La construcción está pensada para absorber la fuerza completa de armas pesadas sin degradarse.',
+              'En las pruebas, un ESP32 en protoboard controlaba un anillo de LEDs sobre el neumático. Hoy los cables conectan los sensores y los LEDs a la electrónica; los de cada segmento irán montados en placas individuales.',
+            ],
+            figures: [
+              { src: img3('led-ring-test.jpg'), alt: 'Neumático sobre una mesa con un anillo de LEDs de colores en su borde interior y un ESP32 en una protoboard en el centro', caption: 'Prueba con un ESP32 en protoboard controlando un anillo de LEDs de colores sobre el neumático.', tall: true },
+              { src: img3('tire-led-test.jpg'), alt: 'Neumático apoyado en una silla con varios LEDs rojos encendidos en el borde y cables en el interior', caption: 'El neumático con LEDs en el borde y los cables hacia la electrónica, en el interior.', tall: true },
+            ],
+          },
+          {
+            heading: 'Sistema de montaje universal',
+            paragraphs: [
+              'El soporte «Universal» busca que el blanco se monte en cualquier parte y se ajuste al instante, funcionando con la configuración de cada persona y no en su contra. Sigue en fase de prototipo.',
+            ],
+            figures: [
+              { src: img3('test-rig.jpg'), alt: 'Neumático sujeto por un marco de perfil de aluminio con dos piezas naranjas de ajuste, junto a una placa con un módulo ESP32 conectada por cables', caption: 'Prototipo del soporte «Universal» para neumáticos: un marco de perfil de aluminio sujeta el neumático y las piezas naranjas sirven para ajustarlo. Junto a él, la placa con ESP32.', tall: true },
+            ],
+          },
+          {
+            heading: 'App móvil complementaria',
+            paragraphs: [
+              'La app se conecta por Bluetooth y sirve para seguir la velocidad y la precisión de los impactos en tiempo real, con modos de entrenamiento gamificados. También permite configurar cosas como las luces y los patrones de golpes, y actualizar el firmware por aire (OTA).',
+              'El anillo de ocho segmentos de la pantalla de patrones representa los ocho segmentos del blanco.',
+            ],
+            figures: [
+              { src: img3('app-pattern-mode.jpg'), alt: 'Pantalla de la app móvil en modo de patrones: un anillo de ocho segmentos con dos iluminados y un botón de inicio', caption: 'La app en el modo de patrones: el anillo representa los ocho segmentos del blanco, con dos iluminados.', tall: true },
+            ],
+          },
+          {
+            heading: 'Primer prototipo de la PCB (V0.1)',
+            paragraphs: [
+              'La primera placa es un prototipo (V0.1) con una placa de desarrollo ESP32 (ESP-WROOM-32D, con USB-C). Tiene ocho entradas de sensor con conectores jack de 3,5 mm, leídas por dos módulos ADS1115, y cuatro salidas con conectores Molex para LEDs. Cada entrada lleva su propio circuito con resistencia, diodos y un condensador.',
+              'Es una primera iteración: la arquitectura evolucionó después hacia el nRF52840.',
+            ],
+            figures: [
+              { src: img3('pcb-v01.jpg'), alt: 'Render 3D de la placa Iron Impact V0.1 con un módulo ESP32, dos módulos ADS1115, ocho entradas jack y cuatro salidas para LEDs', caption: 'Render 3D de la placa Iron Impact V0.1, el primer prototipo.', wide: true },
+            ],
+          },
+        ],
+      },
       thesis: {
         title: 'Tesis de magíster: estimar la carga de un cargador frontal con cámaras y señales de control',
         lead: 'Mi tesis del Magíster en Ciencias de la Ingeniería (PUC Chile, enero 2025, profesor guía Miguel Torres Torriti). Estudia si se puede estimar de forma continua la masa y el momento de inercia de un cargador frontal usando aceleraciones obtenidas con cámaras y el torque deducido de las señales de control, en vez de sensores de torque costosos.',
@@ -200,18 +278,26 @@ export const content = {
         slug: 'thegame',
       },
       {
-        title: 'Iron Impact',
-        summary: 'Smart martial-arts training hardware with piezoelectric sensors and high-density EVA foam. The architecture moved from ESP32 to nRF52840 to cut power use and stream low-latency BLE telemetry.',
-        tags: ['nRF52840', 'ESP32', 'BLE', 'Piezoelectric sensors'],
-        href: links.tekknight,
-        cta: 'See it on tekknight.io',
+        title: 'Iron Impact: next-gen smart striking target',
+        summary: 'Smart striking target for HEMA, buhurt, kendo, fencing and combat sports, with reactive LED sensor plates, a universal mounting system and a companion mobile app. The architecture moved from ESP32 to nRF52840 to cut power use and stream low-latency BLE telemetry.',
+        tags: ['ESP32', 'nRF52840', 'BLE', 'ADS1115', 'PCB'],
+        image: img3('pcb-v01.jpg'),
+        imageAlt: '3D render of the Iron Impact V0.1 board with an ESP32 module, two ADS1115 modules and eight jack inputs',
+        href: '/en/projects/iron-impact/',
+        slug: 'iron-impact',
       },
     ],
     aboutTitle: 'About me',
     about: [
-      'I am an electrical and electronics engineer (MSc, PUC Chile) focused on robotics and embedded systems. Since 2022 I have worked at Zippedi: I validated and manufactured the hardware for a fleet of 20 robots in 3 LATAM countries, took equipment through FCC certification and wrote FreeRTOS firmware for MSPM0.',
-      'TekKnight is my own project, where I design product hardware and firmware.',
+      'I am an electrical and electronics engineer (MSc, PUC Chile) focused on robotics and embedded systems. I work at Zippedi as an Electrical Hardware Engineer. Zippedi builds an autonomous robot that drives through stores and scans the shelves with cameras to detect out-of-stock products and pricing errors.',
     ],
+    tekknight: {
+      name: 'TekKnight',
+      tagline: 'Old Arts. Modern Tools',
+      description: 'Engineering sword fighting training tools. It is my own venture, where I design the hardware and firmware.',
+      logoAlt: 'TekKnight logo: a knight helmet with glowing red details',
+      links: tkLinks,
+    },
     skillsTitle: 'What I work with',
     skills: [
       ['Firmware', 'C, C++, Python, FreeRTOS, ESP32, nRF52840, MSPM0'],
@@ -224,6 +310,67 @@ export const content = {
     switchTo: 'Español',
     back: 'Back to projects',
     pages: {
+      'iron-impact': {
+        title: 'Iron Impact: next-gen smart striking target',
+        lead: 'Iron Impact is a smart striking target for HEMA, buhurt, kendo, fencing and combat sports, with real-time impact metrics: the target that fights back with data. I develop it at TekKnight, where I design the hardware and firmware.',
+        facts: [
+          ['My role', 'Hardware and firmware design (Lead Hardware Engineer at TekKnight)'],
+          ['Stack', 'ESP32, nRF52840, ADS1115, BLE, OTA'],
+          ['Status', 'PCB V0.1 and "Universal" tire mount, both at prototype stage; the architecture later moved to the nRF52840'],
+        ],
+        links: [['See TekKnight', 'https://tekknight.io']],
+        sections: [
+          {
+            heading: 'The product',
+            paragraphs: [
+              'Iron Impact combines piezoelectric sensors with high-density EVA foam. I designed the hardware and firmware and have been iterating on them: the first architecture used an ESP32, and I later moved to an nRF52840 to cut power use and stream low-latency BLE telemetry.',
+            ],
+            figures: [
+              { video: 'cCJvmzllVtA', title: 'Iron Impact: Field testing', caption: 'Video: Iron Impact field testing.', wide: true },
+            ],
+          },
+          {
+            heading: 'Reactive LED sensor plates',
+            paragraphs: [
+              'The target is made of eight segments with sensors and reactive LEDs, mounted on a tire. The construction is designed to absorb the full force of heavy weapons without degrading.',
+              'In the tests, an ESP32 on a breadboard drove a ring of LEDs on the tire. Today cables connect the sensors and LEDs to the electronics; those of each segment will be mounted on individual boards.',
+            ],
+            figures: [
+              { src: img3('led-ring-test.jpg'), alt: 'Tire on a table with a ring of colored LEDs along its inner edge and an ESP32 on a breadboard in the middle', caption: 'Test with an ESP32 on a breadboard driving a ring of colored LEDs on the tire.', tall: true },
+              { src: img3('tire-led-test.jpg'), alt: 'Tire resting on a chair with several red LEDs lit along its edge and cables inside', caption: 'The tire with LEDs along its edge and the cables to the electronics, inside.', tall: true },
+            ],
+          },
+          {
+            heading: 'Universal mounting system',
+            paragraphs: [
+              'The "Universal" mount aims to let the target be mounted anywhere and adjusted instantly, working with each person setup rather than against it. It is still at prototype stage.',
+            ],
+            figures: [
+              { src: img3('test-rig.jpg'), alt: 'Tire held by an aluminum-profile frame with two orange adjustment pieces, next to a board with an ESP32 module connected by cables', caption: 'Prototype of the "Universal" tire mount: an aluminum-profile frame holds the tire and the orange pieces are used to adjust it. Next to it, the ESP32 board.', tall: true },
+            ],
+          },
+          {
+            heading: 'Companion mobile app',
+            paragraphs: [
+              'The app connects over Bluetooth and is used to track impact speed and accuracy in real time, with gamified training modes. It also configures things like the lights and the strike patterns, and updates the firmware over the air (OTA).',
+              'The ring of eight segments on the pattern screen represents the eight segments of the target.',
+            ],
+            figures: [
+              { src: img3('app-pattern-mode.jpg'), alt: 'Mobile app screen in pattern mode: a ring of eight segments with two lit and a start button', caption: 'The app in pattern mode: the ring represents the eight segments of the target, two of them lit.', tall: true },
+            ],
+          },
+          {
+            heading: 'First PCB prototype (V0.1)',
+            paragraphs: [
+              'The first board is a prototype (V0.1) built around an ESP32 development board (ESP-WROOM-32D, with USB-C). It has eight sensor inputs on 3.5 mm jack connectors, read by two ADS1115 modules, and four Molex outputs for LEDs. Each input has its own circuit with a resistor, diodes and a capacitor.',
+              'It is a first iteration: the architecture later evolved toward the nRF52840.',
+            ],
+            figures: [
+              { src: img3('pcb-v01.jpg'), alt: '3D render of the Iron Impact V0.1 board with an ESP32 module, two ADS1115 modules, eight jack inputs and four LED outputs', caption: '3D render of the Iron Impact V0.1 board, the first prototype.', wide: true },
+            ],
+          },
+        ],
+      },
       thesis: {
         title: 'Master thesis: estimating the payload of a skid-steer loader with cameras and control signals',
         lead: 'My Master in Engineering Sciences thesis (PUC Chile, January 2025, advisor Miguel Torres Torriti). It studies whether the mass and moment of inertia of a skid-steer loader can be estimated continuously from camera-derived accelerations and from torque inferred from the control signals, instead of costly torque sensors.',
