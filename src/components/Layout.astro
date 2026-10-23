@@ -53,7 +53,7 @@ const site = Astro.site?.origin ?? '';
 </script>
 
 <style is:global>
-  :root { --paper: #ffffff; --paper-end: #e3e6e9; --deep: #eef0f2; --ink: #17212b; --muted: #55616d; --accent: #0f5a43; --trace: #c6ccd2; --shadow: 0 2px 6px rgba(23, 33, 43, 0.14); --font: 'Libre Baskerville', Georgia, 'Times New Roman', serif; color-scheme: light; }
+  :root { --paper: #ffffff; --paper-end: #e6e8f0; --deep: #eef0f6; --ink: #2e2e2e; --muted: #5f5f6b; --accent: #000070; --trace: #c8cad6; --shadow: 0 2px 6px rgba(0, 0, 112, 0.12); --font: 'Libre Baskerville', Georgia, 'Times New Roman', serif; color-scheme: light; }
   * { box-sizing: border-box; }
   html { background: var(--paper-end); }
   body { margin: 0; position: relative; overflow-x: hidden; min-height: 100vh; background: linear-gradient(180deg, var(--paper) 0%, var(--paper-end) 100%); color: var(--ink); font: 0.98rem/1.75 var(--font); }
@@ -67,7 +67,7 @@ const site = Astro.site?.origin ?? '';
   .top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .brand { font-weight: 700; text-decoration: none; }
   h1 { font-size: clamp(1.7rem, 4.4vw, 2.7rem); line-height: 1.2; letter-spacing: 0; margin: 0; max-width: 22ch; }
-  h2 { font-size: 1.15rem; margin: 0 0 1.25rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--trace); }
+  h2 { font-size: 1.15rem; margin: 0 0 1.25rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--trace); color: var(--accent); }
   h3 { margin: 0 0 0.5rem; font-size: 1.2rem; line-height: 1.35; }
   .meta, .tags { font: 0.8rem/1.6 var(--font); color: var(--muted); }
   .links { list-style: none; padding: 0; margin: 0 0 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }

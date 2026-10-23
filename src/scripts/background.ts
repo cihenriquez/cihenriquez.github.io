@@ -4,6 +4,7 @@ import { circuit, CREST_WIDTH, G, type Board, type Shape, type Trace } from './c
 
 const BUCKET = 400; // board rows are indexed in bands this tall, in crest pixels
 const REVEAL = 0.85; // growth reaches this far down the viewport
+const INK = '#000070'; // the CV's accent colour
 const PAUSE = 300; // ms without scrolling before the traces start growing
 const GROW = 1800; // ms a growth step takes at least; longer steps take up to twice this
 
@@ -61,7 +62,7 @@ export function background(bg: HTMLElement) {
       bands[b]?.shapes.forEach((s) => shapes.add(s));
     }
 
-    ctx.strokeStyle = '#000';
+    ctx.strokeStyle = INK;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     for (const width of [6, 9]) {
@@ -90,7 +91,7 @@ export function background(bg: HTMLElement) {
       if (clock(s.root) < s.t) continue;
       ctx.beginPath();
       if (s.kind === 'rect') {
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = INK;
         ctx.fillRect(s.x, s.y, s.w, s.h);
       } else if (s.kind === 'outline') {
         ctx.lineWidth = 4;
@@ -105,7 +106,7 @@ export function background(bg: HTMLElement) {
         if (s.kind === 'via') {
           ctx.beginPath();
           ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = '#000';
+          ctx.fillStyle = INK;
           ctx.fill();
         }
       }
