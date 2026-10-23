@@ -5,7 +5,7 @@ import { circuit, CREST_WIDTH, G, type Board, type Shape, type Trace } from './c
 const BUCKET = 400; // board rows are indexed in bands this tall, in crest pixels
 const REVEAL = 0.85; // growth reaches this far down the viewport
 const PAUSE = 300; // ms without scrolling before the traces start growing
-const GROW = 600; // ms a growth step takes at least; longer steps take up to twice this
+const GROW = 1800; // ms a growth step takes at least; longer steps take up to twice this
 
 interface Band { traces: Trace[]; shapes: Shape[] }
 
@@ -138,7 +138,7 @@ export function background(bg: HTMLElement) {
       to = goal;
       start = now;
     }
-    const duration = GROW + Math.min(GROW, (to - from) * 0.5);
+    const duration = GROW + Math.min(GROW, (to - from) * 1.5);
     const t = Math.min(1, (now - start) / duration);
     shown = from + (to - from) * (1 - (1 - t) ** 3);
     draw();
