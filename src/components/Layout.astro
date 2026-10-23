@@ -23,7 +23,10 @@ const site = Astro.site?.origin ?? '';
     <Fragment set:html={`<style>@font-face{font-family:'Libre Baskerville';src:url(${url('/fonts/LibreBaskerville-VariableFont_wght.ttf')}) format('truetype');font-weight:400 700;font-style:normal;font-display:swap}</style>`} />
   </head>
   <body>
-    <img class="crest" src={url('/crest.png')} alt="" aria-hidden="true" decoding="async" />
+    <div class="bg" aria-hidden="true">
+      <img class="crest" src={url('/crest.svg')} alt="" width="1207" height="1212" decoding="async" />
+      <canvas class="traces"></canvas>
+    </div>
     <div class="wrap">
       <header class="top">
         <a class="brand" href={url(homeHref)}>{t.name}</a>
@@ -44,12 +47,19 @@ const site = Astro.site?.origin ?? '';
   </body>
 </html>
 
+<script>
+  import { background } from '../scripts/background';
+  background(document.querySelector<HTMLElement>('.bg')!);
+</script>
+
 <style is:global>
   :root { --paper: #ffffff; --paper-end: #e3e6e9; --deep: #eef0f2; --ink: #17212b; --muted: #55616d; --accent: #0f5a43; --trace: #c6ccd2; --font: 'Libre Baskerville', Georgia, 'Times New Roman', serif; color-scheme: light; }
   * { box-sizing: border-box; }
   html { background: var(--paper-end); }
   body { margin: 0; position: relative; overflow-x: hidden; min-height: 100vh; background: linear-gradient(180deg, var(--paper) 0%, var(--paper-end) 100%); color: var(--ink); font: 0.98rem/1.75 var(--font); }
-  .crest { position: absolute; top: 0; left: 0; width: 50vw; min-width: 16rem; height: auto; opacity: 0.05; mix-blend-mode: multiply; pointer-events: none; user-select: none; z-index: 0; }
+  .bg { position: absolute; inset: 0; overflow: hidden; opacity: 0.05; mix-blend-mode: multiply; pointer-events: none; user-select: none; z-index: 0; }
+  .crest { position: absolute; top: 0; left: 0; width: 50vw; min-width: 16rem; height: auto; }
+  .traces { position: fixed; inset: 0; width: 100%; height: 100%; }
   .wrap { position: relative; z-index: 1; max-width: 56rem; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
   a { color: var(--ink); text-underline-offset: 3px; }
   a:hover { color: var(--accent); }
