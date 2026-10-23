@@ -296,6 +296,7 @@ export const content = {
             ],
             figures: [
               { src: img4('layout.jpg'), alt: 'Render del layout de la tarjeta con el microcontrolador, los optoacopladores, los TRIACs y los conectores de potencia', caption: 'Layout de la nueva tarjeta, diseñado en EAGLE.', wide: true },
+              { src: img4('display-board.jpg'), alt: 'Render de una placa verde con un display LCD de cuatro dígitos de siete segmentos y un conector de cuatro pines', caption: 'Render de la placa del display LCD, que se conecta a la tarjeta por I2C.', wide: true },
             ],
           },
           {
@@ -317,6 +318,9 @@ export const content = {
             heading: 'Resultado',
             paragraphs: [
               'Se entregaron 20 kits con su documentación y quedaron en pruebas en Chile y México. Tres presentaron fallas: al menos una por un componente mal soldado, algo esperable con componentes tan pequeños soldados a mano. Si lo hiciera de nuevo, revisaría el costo: con alimentación desde una batería, el filtro Pi y el diodo TVS probablemente están sobredimensionados, y la poca carga de procesamiento permitiría un microcontrolador más barato.',
+            ],
+            figures: [
+              { src: img4('board-running.jpg'), alt: 'La tarjeta de control instalada en el equipo, con LEDs de diagnóstico encendidos, conectores enchufables y el display LCD conectado', caption: 'Una de las tarjetas funcionando en el equipo, con los LEDs de diagnóstico encendidos y el display conectado.', tall: true },
             ],
           },
         ],
@@ -651,6 +655,7 @@ export const content = {
             ],
             figures: [
               { src: img4('layout.jpg'), alt: 'Layout render of the board with the microcontroller, optocouplers, TRIACs and power connectors', caption: 'The new board layout, designed in EAGLE.', wide: true },
+              { src: img4('display-board.jpg'), alt: 'Render of a green board with a four-digit seven-segment LCD and a four-pin connector', caption: 'Render of the LCD display board, which connects to the control board over I2C.', wide: true },
             ],
           },
           {
@@ -672,6 +677,9 @@ export const content = {
             heading: 'Outcome',
             paragraphs: [
               'Twenty kits were delivered with their documentation and went into testing in Chile and Mexico. Three had faults, at least one from a badly soldered part, which is expected with components this small soldered by hand. If I did it again I would look at cost: with a battery as the supply, the Pi filter and the TVS diode are probably oversized, and the light processing load would allow a cheaper microcontroller.',
+            ],
+            figures: [
+              { src: img4('board-running.jpg'), alt: 'The control board installed in the unit, with diagnostic LEDs lit, pluggable connectors and the LCD display attached', caption: 'One of the boards running in the unit, with the diagnostic LEDs lit and the display attached.', tall: true },
             ],
           },
         ],
