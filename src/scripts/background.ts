@@ -4,6 +4,8 @@ import { circuit, CREST_WIDTH, G, type Board, type Shape, type Trace } from './c
 
 const BUCKET = 400; // board rows are indexed in bands this tall, in crest pixels
 const REVEAL = 0.85; // growth reaches this far down the viewport
+const PAUSE = 300; // ms without scrolling before the traces start growing
+const GROW = 600; // ms a growth step takes at least; longer steps take up to twice this
 
 interface Band { traces: Trace[]; shapes: Shape[] }
 
@@ -110,12 +112,37 @@ export function background(bg: HTMLElement) {
     }
   };
 
-  const tick = () => {
+  // Growth waits until the reader stops scrolling, then plays as one eased animation, so it
+  // reads as an effect rather than as the background lagging behind the scroll.
+  let lastScroll = performance.now();
+  let from = 0;
+  let to = 0;
+  let start = 0;
+  const tick = (now: number) => {
     frame = 0;
     goal = Math.max(goal, innerHeight * REVEAL - bg.getBoundingClientRect().top);
-    shown = still ? Infinity : Math.min(goal, shown + Math.max((goal - shown) * 0.12, 3));
+    if (still) {
+      shown = Infinity;
+      draw();
+      return;
+    }
+    if (now - lastScroll < PAUSE) {
+      start = 0;
+      draw();
+      schedule();
+      return;
+    }
+    if (!start || goal !== to) {
+      // Whatever is above the viewport grows at once; only the part in view animates.
+      from = Math.max(shown, -bg.getBoundingClientRect().top);
+      to = goal;
+      start = now;
+    }
+    const duration = GROW + Math.min(GROW, (to - from) * 0.5);
+    const t = Math.min(1, (now - start) / duration);
+    shown = from + (to - from) * (1 - (1 - t) ** 3);
     draw();
-    if (shown < goal) schedule();
+    if (t < 1) schedule();
   };
   const schedule = () => {
     frame ||= requestAnimationFrame(tick);
@@ -125,6 +152,13 @@ export function background(bg: HTMLElement) {
     build();
     schedule();
   }).observe(bg);
-  addEventListener('scroll', schedule, { passive: true });
+  addEventListener(
+    'scroll',
+    () => {
+      lastScroll = performance.now();
+      schedule();
+    },
+    { passive: true },
+  );
   addEventListener('resize', schedule);
 }
