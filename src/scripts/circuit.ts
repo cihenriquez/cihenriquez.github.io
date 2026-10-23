@@ -38,7 +38,10 @@ interface Grower {
   root: number;
   rand: Rand;
   group?: Group;
-  pts: number[];
+  pts: number[]; // where the trace starts, as x, y, round triples
+  cells: number[]; // every cell it has stepped into since, as i, j, round triples
+  forks: number[]; // cells.length and child id of each branch; it can't back up past a live one
+  end?: 'pad' | 'via' | 'edge';
 }
 interface Pin { i: number; j: number; dir: number; reach: number }
 
@@ -78,8 +81,8 @@ export function circuit(width: number, height: number, seed: number): Board {
   const shapes: Shape[] = [];
   let active: Grower[] = [];
 
-  const grow = (g: Omit<Grower, 'id' | 'run' | 'jog' | 'len'>) => {
-    const t: Grower = { ...g, id: parentOf.length, run: 0, jog: 0, len: 0 };
+  const grow = (g: Omit<Grower, 'id' | 'run' | 'jog' | 'len' | 'cells' | 'forks'>) => {
+    const t: Grower = { ...g, id: parentOf.length, run: 0, jog: 0, len: 0, cells: [], forks: [] };
     parentOf.push(t.parent);
     lenOf.push(0);
     claim(t.x, t.y, t.id);
@@ -112,29 +115,72 @@ export function circuit(width: number, height: number, seed: number): Board {
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) claim(i, j, -1);
   };
 
-  // 'edge' ends a trace bare: at the page edge, or as a stub right next to its pin.
+  const room = (t: Grower, r: number) => {
+    for (let v = -r; v <= r; v++)
+      for (let u = -r; u <= r; u++) {
+        const o = at(t.x + u, t.y + v);
+        if (o !== 0 && o !== t.id) return false;
+      }
+    return true;
+  };
+
+  const ended: Grower[] = [];
+  // Components and vias, kept only if at least one of their traces survives.
+  const sources: { shapes: Shape[]; ids: number[] }[] = [];
+  const alive = new Set<number>();
   const finish = (t: Grower, end: 'pad' | 'via' | 'edge') => {
-    t.pts.push(center(t.x), center(t.y), t.at);
-    const ys = t.pts.filter((_, k) => k % 3 === 1);
-    traces.push({ pts: t.pts, w: t.w, root: t.root, top: Math.min(...ys), bottom: Math.max(...ys) });
+    t.end = end;
+    ended.push(t);
+  };
+
+  // Every trace ends in a pad or a via, at a fork, or off the page. When there is no room for
+  // the pad, the trace backs up along its own path until there is; if it can't, it ends at its
+  // last fork, or disappears if it never forked. Branches are settled before their parents, so
+  // a fork only counts if its branch survived.
+  const settle = (t: Grower) => {
+    let end = t.end!;
+    let fork = 0;
+    for (let k = 0; k < t.forks.length; k += 2) if (alive.has(t.forks[k + 1])) fork = t.forks[k];
+    if (end !== 'edge') {
+      while (!room(t, 1) && t.cells.length > fork) {
+        const n = t.cells.length;
+        owner[t.cells[n - 2] * cols + t.cells[n - 3]] = 0;
+        t.cells.length = n - 3;
+        const k = t.cells.length ? t.cells.length - 3 : -1;
+        t.x = k < 0 ? Math.round(t.pts[t.pts.length - 3] / G - 0.5) : t.cells[k];
+        t.y = k < 0 ? Math.round(t.pts[t.pts.length - 2] / G - 0.5) : t.cells[k + 1];
+        t.at = k < 0 ? t.pts[t.pts.length - 1] : t.cells[k + 2];
+      }
+      if (!room(t, 1)) {
+        if (!fork) {
+          if (at(t.x, t.y) === t.id) owner[t.y * cols + t.x] = 0;
+          return;
+        }
+        end = 'edge';
+      }
+    }
+    alive.add(t.id);
+
+    const all = [...t.pts];
+    for (let k = 0; k < t.cells.length; k += 3) all.push(center(t.cells[k]), center(t.cells[k + 1]), t.cells[k + 2]);
+    const pts = all.slice(0, 3);
+    for (let k = 3; k < all.length - 3; k += 3) {
+      const [ax, ay] = [all[k] - all[k - 3], all[k + 1] - all[k - 2]];
+      const [bx, by] = [all[k + 3] - all[k], all[k + 4] - all[k + 1]];
+      if (ax * by !== ay * bx || ax * bx + ay * by <= 0) pts.push(all[k], all[k + 1], all[k + 2]);
+    }
+    if (all.length > 3) pts.push(...all.slice(-3));
+    const ys = pts.filter((_, k) => k % 3 === 1);
+    traces.push({ pts, w: t.w, root: t.root, top: Math.min(...ys), bottom: Math.max(...ys) });
     if (end === 'edge') return;
     if (end === 'via') {
       shapes.push({ kind: 'via', x: center(t.x), y: center(t.y), t: t.at, root: t.root });
       block(t.x - 1, t.y - 1, t.x + 1, t.y + 1);
       return;
     }
-    const big = roomFor(t);
-    const r = big ? 2 : 1;
-    shapes.push({ kind: 'ring', x: center(t.x), y: center(t.y), r: big ? 16 : 11, w: t.w, t: t.at, root: t.root });
+    const r = room(t, 2) ? 2 : 1;
+    shapes.push({ kind: 'ring', x: center(t.x), y: center(t.y), r: r === 2 ? 16 : 11, w: t.w, t: t.at, root: t.root });
     block(t.x - r, t.y - r, t.x + r, t.y + r);
-  };
-  const roomFor = (t: Grower) => {
-    for (let v = -2; v <= 2; v++)
-      for (let u = -2; u <= 2; u++) {
-        const o = at(t.x + u, t.y + v);
-        if (o !== 0 && o !== t.id) return false;
-      }
-    return true;
   };
 
   // Outer pads of the crest.
@@ -232,21 +278,24 @@ export function circuit(width: number, height: number, seed: number): Board {
     if (!free(ox + lo[0] - 3, oy + lo[1] - 3, ox + hi[0] + 3, oy + hi[1] + 3)) return;
 
     const root = center(oy + (lo[1] + hi[1]) / 2);
+    const source = { shapes: [] as Shape[], ids: [] as number[] };
+    sources.push(source);
     for (const [k, [i, j]] of cells.entries()) {
       const [, , w, h, round] = part.pads[k];
       const [pw, ph] = turn % 2 ? [h, w] : [w, h];
-      if (round) shapes.push({ kind: 'ring', x: center(ox + i), y: center(oy + j), r: w * G, w: 7, t: 0, root });
-      else shapes.push({ kind: 'rect', x: center(ox + i) - (pw * G) / 2, y: center(oy + j) - (ph * G) / 2, w: pw * G, h: ph * G, t: 0, root });
+      if (round) source.shapes.push({ kind: 'ring', x: center(ox + i), y: center(oy + j), r: w * G, w: 7, t: 0, root });
+      else source.shapes.push({ kind: 'rect', x: center(ox + i) - (pw * G) / 2, y: center(oy + j) - (ph * G) / 2, w: pw * G, h: ph * G, t: 0, root });
     }
     if (part.body) {
       const [a, b] = rot(part.body[0], part.body[1]);
       const [c, d] = rot(part.body[2], part.body[3]);
       const x = (ox + Math.min(a, c) + 0.5) * G;
       const y = (oy + Math.min(b, d) + 0.5) * G;
-      shapes.push({ kind: 'outline', x, y, w: Math.abs(c - a) * G, h: Math.abs(d - b) * G, t: 0, root });
+      source.shapes.push({ kind: 'outline', x, y, w: Math.abs(c - a) * G, h: Math.abs(d - b) * G, t: 0, root });
     }
-    block(ox + lo[0] - 1, oy + lo[1] - 1, ox + hi[0] + 1, oy + hi[1] + 1);
-    for (const [i, j] of starts) owner[(oy + j) * cols + ox + i] = 0;
+    const [pl, pt] = [Math.min(...cells.map((c) => c[0])), Math.min(...cells.map((c) => c[1]))];
+    const [pr, pb] = [Math.max(...cells.map((c) => c[0])), Math.max(...cells.map((c) => c[1]))];
+    block(ox + pl - 1, oy + pt - 1, ox + pr + 1, oy + pb + 1);
 
     const groups = part.buses.map((): Group => ({ rand: random(hash(seed, key, 7)), plan: new Map() }));
     const w = rand() < 0.3 ? 9 : 6;
@@ -257,21 +306,27 @@ export function circuit(width: number, height: number, seed: number): Board {
       const dir = wrap(p.dir + 2 * turn);
       const group = groups[part.buses.findIndex((b) => b.includes(k))];
       const pts = [center(ox + pi), center(oy + pj), 0, center(ox + si), center(oy + sj), 1];
-      active.push(grow({ parent: 0, x: ox + si, y: oy + sj, dir, pref: dir, base: dir, grace: 1, w, at: 1, root, rand: random(hash(seed, key, k)), group, pts }));
+      const t = grow({ parent: 0, x: ox + si, y: oy + sj, dir, pref: dir, base: dir, grace: 1, w, at: 1, root, rand: random(hash(seed, key, k)), group, pts });
+      source.ids.push(t.id);
+      active.push(t);
     });
   };
 
   const via = (rand: Rand, i: number, j: number, key: number) => {
     if (!free(i - 3, j - 3, i + 3, j + 3)) return;
     const root = center(j);
-    shapes.push({ kind: 'via', x: center(i), y: center(j), t: 0, root });
-    claim(i, j, -1);
+    const source = { shapes: [{ kind: 'via', x: center(i), y: center(j), t: 0, root }] as Shape[], ids: [] as number[] };
+    sources.push(source);
+    block(i - 1, j - 1, i + 1, j + 1);
     const first = Math.floor(rand() * 8);
     const count = 1 + Math.floor(rand() * 3);
     for (let k = 0; k < count; k++) {
       const dir = wrap(first + k * (2 + Math.floor(rand() * 2)));
+      owner[(j + DIRS[dir][1]) * cols + i + DIRS[dir][0]] = 0;
       const pts = [center(i), center(j), 0, center(i + DIRS[dir][0]), center(j + DIRS[dir][1]), 1];
-      active.push(grow({ parent: 0, x: i + DIRS[dir][0], y: j + DIRS[dir][1], dir, pref: dir, base: dir, grace: 1, w: 6, at: 1, root, rand: random(hash(seed, key, k)), pts }));
+      const t = grow({ parent: 0, x: i + DIRS[dir][0], y: j + DIRS[dir][1], dir, pref: dir, base: dir, grace: 1, w: 6, at: 1, root, rand: random(hash(seed, key, k)), pts });
+      source.ids.push(t.id);
+      active.push(t);
     }
   };
 
@@ -333,19 +388,16 @@ export function circuit(width: number, height: number, seed: number): Board {
         const i = t.x + DIRS[c][0];
         const j = t.y + DIRS[c][1];
         if (!inside(i, j)) {
-          if (c !== t.dir) t.pts.push(center(t.x), center(t.y), t.at);
+          t.cells.push(i, j, round);
           t.x = i;
           t.y = j;
-          t.at = round;
           finish(t, 'edge');
           moved = true;
           break;
         }
         if (!canEnter(t, i, j, c)) continue;
-        if (c !== t.dir) {
-          t.pts.push(center(t.x), center(t.y), t.at);
-          t.run = 0;
-        }
+        if (c !== t.dir) t.run = 0;
+        t.cells.push(i, j, round);
         t.dir = c;
         t.run++;
         t.x = i;
@@ -359,7 +411,7 @@ export function circuit(width: number, height: number, seed: number): Board {
         break;
       }
       if (!moved) {
-        finish(t, t.len < 2 ? 'edge' : rand() < 0.3 ? 'via' : 'pad');
+        finish(t, rand() < 0.3 ? 'via' : 'pad');
         continue;
       }
       if (!inside(t.x, t.y)) continue;
@@ -378,6 +430,7 @@ export function circuit(width: number, height: number, seed: number): Board {
           const pts = [center(t.x), center(t.y), t.at];
           const child = grow({ parent: t.id, x: t.x, y: t.y, dir: b, pref: wrap(t.dir + side), base: t.base, grace: 0, w: t.w, at: t.at, root: t.root, rand: random(Math.floor(rand() * 2 ** 32)), pts });
           child.jog = 1 + Math.floor(rand() * 3);
+          t.forks.push(t.cells.length, child.id);
           next.push(child);
         }
       }
@@ -385,6 +438,8 @@ export function circuit(width: number, height: number, seed: number): Board {
     }
     active = next;
   }
+  ended.sort((a, b) => b.id - a.id).forEach(settle);
 
+  for (const source of sources) if (source.ids.some((id) => alive.has(id))) shapes.push(...source.shapes);
   return { traces, shapes };
 }
