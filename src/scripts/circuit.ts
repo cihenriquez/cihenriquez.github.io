@@ -112,6 +112,7 @@ export function circuit(width: number, height: number, seed: number): Board {
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) claim(i, j, -1);
   };
 
+  // 'edge' ends a trace bare: at the page edge, or as a stub right next to its pin.
   const finish = (t: Grower, end: 'pad' | 'via' | 'edge') => {
     t.pts.push(center(t.x), center(t.y), t.at);
     const ys = t.pts.filter((_, k) => k % 3 === 1);
@@ -289,11 +290,13 @@ export function circuit(width: number, height: number, seed: number): Board {
       }
     }
 
-  // Turns: 45-degree jogs that come back, or 90-degree turns cut with a 45-degree chamfer.
-  const decide = (rand: Rand) => {
+  // Turns: 45-degree jogs that come back (±1), 90-degree turns cut with a 45-degree chamfer (±2),
+  // and diagonal runs straightening out after a few cells (±4).
+  const decide = (rand: Rand, diagonal: boolean) => {
     const r = rand();
-    if (r < 0.05) return r < 0.025 ? 1 : -1;
-    if (r < 0.09) return r < 0.07 ? 2 : -2;
+    if (diagonal) return r < 0.35 ? (r < 0.175 ? 4 : -4) : 0;
+    if (r < 0.08) return r < 0.04 ? 1 : -1;
+    if (r < 0.16) return r < 0.12 ? 2 : -2;
     return 0;
   };
 
@@ -303,13 +306,17 @@ export function circuit(width: number, height: number, seed: number): Board {
       const { dir: d, pref: p, rand } = t;
       const order: number[] = [];
       if (d !== p && t.run >= t.jog) order.push(p);
-      else if (d === p && t.run >= 3) {
+      else if (d === p && t.run >= 2) {
         let turn = 0;
         if (t.group) {
-          if (!t.group.plan.has(round)) t.group.plan.set(round, decide(t.group.rand));
+          if (!t.group.plan.has(round)) t.group.plan.set(round, decide(t.group.rand, p % 2 === 1));
           turn = t.group.plan.get(round)!;
-        } else turn = decide(rand);
-        if (Math.abs(turn) === 1) {
+        } else turn = decide(rand, p % 2 === 1);
+        if (Math.abs(turn) === 4) {
+          const side = diff(p + turn / 4, t.base) <= 2 ? turn / 4 : -turn / 4;
+          t.pref = wrap(p + side);
+          order.push(t.pref);
+        } else if (Math.abs(turn) === 1) {
           order.push(wrap(p + turn));
           t.jog = 1 + Math.floor(rand() * 4);
         } else if (turn && diff(p + turn, t.base) <= 2) {
@@ -352,7 +359,7 @@ export function circuit(width: number, height: number, seed: number): Board {
         break;
       }
       if (!moved) {
-        finish(t, rand() < 0.3 ? 'via' : 'pad');
+        finish(t, t.len < 2 ? 'edge' : rand() < 0.3 ? 'via' : 'pad');
         continue;
       }
       if (!inside(t.x, t.y)) continue;
@@ -360,13 +367,18 @@ export function circuit(width: number, height: number, seed: number): Board {
         finish(t, rand() < 0.35 ? 'via' : 'pad');
         continue;
       }
+      // Branches leave at a right angle, then bend 45 degrees back towards the parent's heading.
       if (t.len >= 3 && rand() < (t.group ? 0.015 : 0.05)) {
-        const b = wrap(t.dir + (rand() < 0.5 ? 1 : -1));
+        let side = rand() < 0.5 ? 1 : -1;
+        if (diff(t.dir + 2 * side, t.base) > 2) side = -side;
+        const b = wrap(t.dir + 2 * side);
         const i = t.x + DIRS[b][0];
         const j = t.y + DIRS[b][1];
         if (diff(b, t.base) <= 2 && inside(i, j) && at(i, j) === 0) {
           const pts = [center(t.x), center(t.y), t.at];
-          next.push(grow({ parent: t.id, x: t.x, y: t.y, dir: b, pref: b, base: t.base, grace: 0, w: t.w, at: t.at, root: t.root, rand: random(Math.floor(rand() * 2 ** 32)), pts }));
+          const child = grow({ parent: t.id, x: t.x, y: t.y, dir: b, pref: wrap(t.dir + side), base: t.base, grace: 0, w: t.w, at: t.at, root: t.root, rand: random(Math.floor(rand() * 2 ** 32)), pts });
+          child.jog = 1 + Math.floor(rand() * 3);
+          next.push(child);
         }
       }
       next.push(t);
