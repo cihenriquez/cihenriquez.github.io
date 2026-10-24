@@ -17,6 +17,7 @@ export function background(bg: HTMLElement) {
   const seed = Math.floor(Math.random() * 2 ** 32);
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let bands: Band[] = [];
+  let reach = 0; // page height (CSS px) the growth needs to reach for the whole board to finish
   let scale = 0;
   let size = '';
   let goal = 0;
@@ -35,6 +36,10 @@ export function background(bg: HTMLElement) {
     };
     for (const t of board.traces) add(t.top - 10, t.bottom + 10, (b) => b.traces.push(t));
     for (const s of board.shapes) add(s.y - 20, s.y + ('h' in s ? s.h : 0) + 20, (b) => b.shapes.push(s));
+    reach = 0;
+    for (const t of board.traces) reach = Math.max(reach, t.root + t.pts[t.pts.length - 1] * G);
+    for (const s of board.shapes) reach = Math.max(reach, s.root + s.t * G);
+    reach *= scale;
   };
 
   // Growth rounds reached by things whose source sits at `root`.
@@ -121,7 +126,10 @@ export function background(bg: HTMLElement) {
   let start = 0;
   const tick = (now: number) => {
     frame = 0;
-    goal = Math.max(goal, innerHeight * REVEAL - bg.getBoundingClientRect().top);
+    const box = bg.getBoundingClientRect();
+    // At the bottom of the page there is nothing left to scroll to, so let everything finish.
+    const atEnd = box.bottom <= innerHeight + 2;
+    goal = Math.max(goal, innerHeight * REVEAL - box.top, atEnd ? reach : 0);
     if (still) {
       shown = Infinity;
       draw();

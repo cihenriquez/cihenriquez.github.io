@@ -238,6 +238,8 @@ export function circuit(width: number, height: number, seed: number): Board {
         pads.push([2 * k, 0, 1.1, 2.3, 0], [2 * k, 5, 1.1, 2.3, 0]);
         pins.push({ i: 2 * k, j: 0, dir: 6, reach: 2 }, { i: 2 * k, j: 5, dir: 2, reach: 2 });
       }
+      // decoupling capacitor on the supply pins' end, clear of every pin's trace
+      pads.push([-3, 1, 1.4, 1, 0], [-3, 3, 1.4, 1, 0]);
       const top = pins.map((_, k) => k).filter((k) => k % 2 === 0);
       return { pads, pins, body: [-1, 1.4, 2 * n - 1, 3.6], buses: [top, top.map((k) => k + 1)] };
     },
@@ -257,6 +259,8 @@ export function circuit(width: number, height: number, seed: number): Board {
         }
       }
       pads.push([s / 2, s / 2, s - 3.5, s - 3.5, 0]);
+      // decoupling capacitor at the pin-1 corner, outside the rows where the traces start
+      pads.push([-3, -2, 1, 1.4, 0], [-1, -2, 1, 1.4, 0]);
       return { pads, pins, body: [0.9, 0.9, s - 0.9, s - 0.9], buses };
     },
     (rand) => {
