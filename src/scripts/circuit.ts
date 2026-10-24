@@ -137,7 +137,7 @@ export function circuit(width: number, height: number, seed: number): Board {
 
   const ended: Grower[] = [];
   // Components and vias, kept only if at least one of their traces survives.
-  const sources: { shapes: Shape[]; ids: number[] }[] = [];
+  const sources: { shapes: Shape[]; ids: number[]; links?: Trace[] }[] = [];
   const alive = new Set<number>();
   const finish = (t: Grower, end: 'pad' | 'via' | 'edge') => {
     t.end = end;
@@ -211,7 +211,9 @@ export function circuit(width: number, height: number, seed: number): Board {
   });
 
   // Footprints, as pads around (0, 0) in grid cells, before rotation.
-  type Part = { pads: [number, number, number, number, number][]; pins: Pin[]; body?: number[]; buses: number[][] };
+  // links: short traces drawn with the part (cell-coordinate polylines); tied: pins they take over,
+  // which then grow no trace of their own.
+  type Part = { pads: [number, number, number, number, number][]; pins: Pin[]; body?: number[]; buses: number[][]; links?: number[][]; tied?: number[] };
   const parts: ((rand: Rand) => Part)[] = [
     (rand) => {
       // 0805-style resistor or capacitor
@@ -238,10 +240,13 @@ export function circuit(width: number, height: number, seed: number): Board {
         pads.push([2 * k, 0, 1.1, 2.3, 0], [2 * k, 5, 1.1, 2.3, 0]);
         pins.push({ i: 2 * k, j: 0, dir: 6, reach: 2 }, { i: 2 * k, j: 5, dir: 2, reach: 2 });
       }
-      // decoupling capacitor on the supply pins' end, clear of every pin's trace
-      pads.push([-3, 1, 1.4, 1, 0], [-3, 3, 1.4, 1, 0]);
+      // decoupling capacitors: two tied to the corner pins, one spare on the other row
+      const r = 2 * n;
+      pads.push([-4, 0, 1, 1.2, 0], [-2, 0, 1, 1.2, 0], [-4, 5, 1, 1.2, 0], [-2, 5, 1, 1.2, 0], [r, 5, 1, 1.2, 0], [r + 2, 5, 1, 1.2, 0]);
+      const links = [[0, 0, -2, 0], [r - 2, 5, r, 5]];
+      const tied = [0, 2 * n - 1];
       const top = pins.map((_, k) => k).filter((k) => k % 2 === 0);
-      return { pads, pins, body: [-1, 1.4, 2 * n - 1, 3.6], buses: [top, top.map((k) => k + 1)] };
+      return { pads, pins, body: [-1, 1.4, 2 * n - 1, 3.6], buses: [top, top.map((k) => k + 1)], links, tied };
     },
     (rand) => {
       // QFN
@@ -259,9 +264,11 @@ export function circuit(width: number, height: number, seed: number): Board {
         }
       }
       pads.push([s / 2, s / 2, s - 3.5, s - 3.5, 0]);
-      // decoupling capacitor at the pin-1 corner, outside the rows where the traces start
-      pads.push([-3, -2, 1, 1.4, 0], [-1, -2, 1, 1.4, 0]);
-      return { pads, pins, body: [0.9, 0.9, s - 0.9, s - 0.9], buses };
+      // decoupling capacitors off three corners, outside the rows where the traces start; the two
+      // top ones are tied to the nearest top pins with a chamfered stub
+      pads.push([-3, -1, 1, 1.2, 0], [-1, -1, 1, 1.2, 0], [s + 1, -1, 1, 1.2, 0], [s + 3, -1, 1, 1.2, 0], [-3, s + 1, 1, 1.2, 0], [-1, s + 1, 1, 1.2, 0]);
+      const links = [[2, 0, 1, -1, -1, -1], [s - 2, 0, s - 1, -1, s + 1, -1]];
+      return { pads, pins, body: [0.9, 0.9, s - 0.9, s - 0.9], buses, links, tied: [0, 4 * (n - 1)] };
     },
     (rand) => {
       // pin header
@@ -308,6 +315,15 @@ export function circuit(width: number, height: number, seed: number): Board {
       const y = (oy + Math.min(b, d) + 0.5) * G;
       source.shapes.push({ kind: 'outline', x, y, w: Math.abs(c - a) * G, h: Math.abs(d - b) * G, t: 0, root });
     }
+    for (const line of part.links ?? []) {
+      const pts: number[] = [];
+      for (let k = 0; k < line.length; k += 2) {
+        const [i, j] = rot(line[k], line[k + 1]);
+        pts.push(center(ox + i), center(oy + j), 0);
+      }
+      const ys = pts.filter((_, k) => k % 3 === 1);
+      (source.links ??= []).push({ pts, w: 6, root, top: Math.min(...ys), bottom: Math.max(...ys) });
+    }
     const [pl, pt] = [Math.min(...cells.map((c) => c[0])), Math.min(...cells.map((c) => c[1]))];
     const [pr, pb] = [Math.max(...cells.map((c) => c[0])), Math.max(...cells.map((c) => c[1]))];
     block(ox + pl - 1, oy + pt - 1, ox + pr + 1, oy + pb + 1);
@@ -315,7 +331,7 @@ export function circuit(width: number, height: number, seed: number): Board {
     const groups = part.buses.map((): Group => ({ rand: random(hash(seed, key, 7)), plan: new Map() }));
     const w = rand() < 0.3 ? 9 : 6;
     part.pins.forEach((p, k) => {
-      if (rand() < 0.2) return;
+      if (rand() < 0.2 || part.tied?.includes(k)) return;
       const [pi, pj] = rot(p.i, p.j);
       const [si, sj] = starts[k];
       const dir = wrap(p.dir + 2 * turn);
@@ -455,6 +471,10 @@ export function circuit(width: number, height: number, seed: number): Board {
   }
   ended.sort((a, b) => b.id - a.id).forEach(settle);
 
-  for (const source of sources) if (source.ids.some((id) => alive.has(id))) shapes.push(...source.shapes);
+  for (const source of sources)
+    if (source.ids.some((id) => alive.has(id))) {
+      shapes.push(...source.shapes);
+      traces.push(...(source.links ?? []));
+    }
   return { traces, shapes };
 }
