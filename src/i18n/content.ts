@@ -27,10 +27,10 @@ const GIMBAL_VIDEO = 'Rixvificvl4';
 export const content = {
   es: {
     htmlLang: 'es',
-    siteTitle: 'Cristian Henríquez · Portafolio de hardware y firmware',
+    siteTitle: 'Cristian Henríquez · Proyectos de hardware y firmware',
     description: 'Portafolio de Cristian Henríquez: electrónica, firmware y robótica.',
     name: 'Cristian Henríquez',
-    intro: 'Diseño electrónica y firmware para robots y dispositivos embebidos, desde el esquemático hasta el producto.',
+    intro: 'Electrónica y firmware para robots y sistemas embebidos.',
     projectsTitle: 'Proyectos',
     viewProject: 'Ver proyecto',
     otherProjectsTitle: 'Otros proyectos',
@@ -366,7 +366,7 @@ export const content = {
             heading: 'Medición automatizada',
             paragraphs: [
               'En la BeagleBone, una capa en Python modela cada eje como lineal o rotacional, convierte milímetros y grados a pasos, guarda la posición en disco para recuperarla entre sesiones y calcula el ángulo necesario para apuntar a un punto.',
-              'Para medir el haz, el script ubica el pico de la fuente cerca de 145 GHz en un analizador de espectro Keysight N9020B, controlado por SCPI, y luego barre θ de 0° a 10° en pasos de 0,5°, registrando la potencia en cada posición.',
+              'Para los experimentos escribí un mapper: lee de un archivo de configuración los rangos y pasos de θ, φ y la distancia, genera la ruta de barrido y, en cada punto, registra la medición desde un ADC, un amplificador lock-in o un analizador de espectro, según el experimento.',
             ],
           },
         ],
@@ -431,10 +431,10 @@ export const content = {
   },
   en: {
     htmlLang: 'en',
-    siteTitle: 'Cristian Henríquez · Hardware & firmware portfolio',
+    siteTitle: 'Cristian Henríquez · Hardware and firmware projects',
     description: 'Portfolio of Cristian Henríquez: electronics, firmware and robotics.',
     name: 'Cristian Henríquez',
-    intro: 'I design electronics and firmware for robots and embedded devices, from the schematic to the finished product.',
+    intro: 'Electronics and firmware for robots and embedded systems.',
     projectsTitle: 'Projects',
     viewProject: 'View project',
     otherProjectsTitle: 'Other projects',
@@ -770,7 +770,7 @@ export const content = {
             heading: 'Automated measurement',
             paragraphs: [
               'On the BeagleBone, a Python layer models each axis as linear or rotational, converts millimeters and degrees to steps, saves the position to disk so it survives between sessions, and computes the angle needed to aim at a point.',
-              'To measure the beam, the script finds the source peak near 145 GHz on a Keysight N9020B spectrum analyzer, controlled over SCPI, then sweeps θ from 0° to 10° in 0.5° steps, logging the power at each position.',
+              'For the experiments I wrote a mapper: it reads the ranges and steps for θ, φ and distance from a configuration file, builds the sweep route and, at each point, logs the measurement from an ADC, a lock-in amplifier or a spectrum analyzer, depending on the experiment.',
             ],
           },
         ],
