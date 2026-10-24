@@ -271,6 +271,41 @@ export function circuit(width: number, height: number, seed: number): Board {
       return { pads, pins, body: [0.9, 0.9, s - 0.9, s - 0.9], buses, links, tied: [0, 4 * (n - 1)] };
     },
     (rand) => {
+      // DIP: through-hole pads in two rows, notch at the pin-1 end
+      const n = 4 + Math.floor(rand() * 4);
+      const pads: Part['pads'] = [];
+      const pins: Pin[] = [];
+      for (let k = 0; k < n; k++) {
+        pads.push([2 * k, 0, 0.75, 0, 1], [2 * k, 6, 0.75, 0, 1]);
+        pins.push({ i: 2 * k, j: 0, dir: 6, reach: 2 }, { i: 2 * k, j: 6, dir: 2, reach: 2 });
+      }
+      pads.push([-0.6, 3, 0.3, 0, 1]);
+      const r = 2 * n;
+      pads.push([-4, 0, 1, 1.2, 0], [-2, 0, 1, 1.2, 0], [-4, 6, 1, 1.2, 0], [-2, 6, 1, 1.2, 0], [r, 6, 1, 1.2, 0], [r + 2, 6, 1, 1.2, 0]);
+      const top = pins.map((_, k) => k).filter((k) => k % 2 === 0);
+      return { pads, pins, body: [-1, 1.3, 2 * n - 1, 4.7], buses: [top, top.map((k) => k + 1)], links: [[0, 0, -2, 0], [r - 2, 6, r, 6]], tied: [0, 2 * n - 1] };
+    },
+    (rand) => {
+      // TQFP: gull-wing leads on four sides reaching past a smaller body, pin-1 dot, no centre pad
+      const n = 4 + Math.floor(rand() * 2);
+      const s = 2 * n + 2;
+      const pads: Part['pads'] = [];
+      const pins: Pin[] = [];
+      const buses: number[][] = [[], [], [], []];
+      for (let k = 0; k < n; k++) {
+        const c = 2 + 2 * k;
+        for (const [i, j, dir, w, h, b] of [[c, 0, 6, 0.9, 2.6, 0], [s, c, 0, 2.6, 0.9, 1], [c, s, 2, 0.9, 2.6, 2], [0, c, 4, 2.6, 0.9, 3]]) {
+          buses[b].push(pins.length);
+          pads.push([i, j, w, h, 0]);
+          pins.push({ i, j, dir, reach: 2 });
+        }
+      }
+      pads.push([2.6, 2.6, 0.3, 0, 1]);
+      pads.push([-3, -1, 1, 1.2, 0], [-1, -1, 1, 1.2, 0], [s + 1, -1, 1, 1.2, 0], [s + 3, -1, 1, 1.2, 0], [-3, s + 1, 1, 1.2, 0], [-1, s + 1, 1, 1.2, 0]);
+      const links = [[2, 0, 1, -1, -1, -1], [s - 2, 0, s - 1, -1, s + 1, -1]];
+      return { pads, pins, body: [1.4, 1.4, s - 1.4, s - 1.4], buses, links, tied: [0, 4 * (n - 1)] };
+    },
+    (rand) => {
       // pin header
       const n = 3 + Math.floor(rand() * 4);
       const pads: Part['pads'] = [];
