@@ -335,7 +335,7 @@ export function circuit(width: number, height: number, seed: number): Board {
     if (!free(ox + lo[0] - 3, oy + lo[1] - 3, ox + hi[0] + 3, oy + hi[1] + 3)) return;
 
     const root = center(oy + (lo[1] + hi[1]) / 2);
-    const source = { shapes: [] as Shape[], ids: [] as number[] };
+    const source: (typeof sources)[number] = { shapes: [], ids: [] };
     sources.push(source);
     for (const [k, [i, j]] of cells.entries()) {
       const [, , w, h, round] = part.pads[k];

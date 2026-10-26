@@ -1,12 +1,12 @@
 // Draws the circuit board behind the page on a viewport-sized canvas. Each part of the board
-// starts growing when the reader scrolls down to it, and never shrinks back.
+// starts growing when the reader scrolls down to it, at a steady pace, and never shrinks back.
 import { circuit, CREST_WIDTH, G, type Board, type Shape, type Trace } from './circuit';
 
 const BUCKET = 400; // board rows are indexed in bands this tall, in crest pixels
 const REVEAL = 0.85; // growth reaches this far down the viewport
 const INK = '#000070'; // the CV's accent colour
-const PAUSE = 300; // ms without scrolling before the traces start growing
-const GROW = 1800; // ms a growth step takes at least; longer steps take up to twice this
+const RATE = 12; // growth rounds per second, the same on every screen size
+const EASE = 0.5; // s over which growth slows down as it catches up with the scroll
 
 interface Band { traces: Trace[]; shapes: Shape[] }
 
@@ -118,12 +118,10 @@ export function background(bg: HTMLElement) {
     }
   };
 
-  // Growth waits until the reader stops scrolling, then plays as one eased animation, so it
-  // reads as an effect rather than as the background lagging behind the scroll.
-  let lastScroll = performance.now();
-  let from = 0;
-  let to = 0;
-  let start = 0;
+  // Growth advances at a steady pace in board rounds rather than in pixels, so a phone (where a
+  // round is only a few pixels tall) grows as slowly as a desktop. It keeps going while the
+  // reader scrolls and eases out as it catches up.
+  let last = 0;
   const tick = (now: number) => {
     frame = 0;
     const box = bg.getBoundingClientRect();
@@ -135,23 +133,16 @@ export function background(bg: HTMLElement) {
       draw();
       return;
     }
-    if (now - lastScroll < PAUSE) {
-      start = 0;
-      draw();
-      schedule();
-      return;
-    }
-    if (!start || goal !== to) {
-      // Whatever is above the viewport grows at once; only the part in view animates.
-      from = Math.max(shown, -bg.getBoundingClientRect().top);
-      to = goal;
-      start = now;
-    }
-    const duration = GROW + Math.min(GROW, (to - from) * 1.5);
-    const t = Math.min(1, (now - start) / duration);
-    shown = from + (to - from) * (1 - (1 - t) ** 3);
+    const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
+    last = now;
+    // Whatever is above the viewport grows at once; only the part in view animates.
+    shown = Math.max(shown, -box.top);
+    const speed = RATE * G * scale; // CSS px per second
+    const left = goal - shown;
+    if (left > 0) shown += Math.min(left, speed * Math.min(1, left / (speed * EASE)) * dt + 0.01);
     draw();
-    if (t < 1) schedule();
+    if (goal - shown > 0.5) schedule();
+    else last = 0;
   };
   const schedule = () => {
     frame ||= requestAnimationFrame(tick);
@@ -161,13 +152,6 @@ export function background(bg: HTMLElement) {
     build();
     schedule();
   }).observe(bg);
-  addEventListener(
-    'scroll',
-    () => {
-      lastScroll = performance.now();
-      schedule();
-    },
-    { passive: true },
-  );
+  addEventListener('scroll', schedule, { passive: true });
   addEventListener('resize', schedule);
 }
