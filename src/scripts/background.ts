@@ -6,7 +6,7 @@ import { circuit, CREST_WIDTH, G, type Board, type Placed, type Trace } from './
 const BUCKET = 400; // board rows are indexed in bands this tall, in crest pixels
 const REVEAL = 0.85; // growth reaches this far down the viewport
 const INK = '#000070'; // the CV's accent colour
-const RATE = 12; // growth rounds per second, the same on every screen size
+const RATE = 14.4; // growth rounds per second, the same on every screen size
 const EASE = 0.5; // s over which growth slows down as it catches up with the scroll
 
 interface Band { traces: Trace[]; shapes: Placed[] }
