@@ -11,14 +11,16 @@ const BLOCK = 22; // components and vias are scattered one block at a time
 const MIN_RUN = 3; // cells a trace keeps its heading before it may turn again
 
 // Every trace and shape carries `root`, the page height where its source sits, and `t`,
-// the growth round it appears at. The renderer reveals them as the reader scrolls there.
+// the growth round it appears at. The renderer reveals them as the reader scrolls there,
+// except component footprints (`fixed`), which are on the board from the start.
 export interface Trace { pts: number[]; w: number; root: number; top: number; bottom: number }
 export type Shape =
   | { kind: 'ring'; x: number; y: number; r: number; w: number; t: number; root: number }
   | { kind: 'via'; x: number; y: number; t: number; root: number }
   | { kind: 'rect'; x: number; y: number; w: number; h: number; t: number; root: number }
   | { kind: 'outline'; x: number; y: number; w: number; h: number; t: number; root: number };
-export interface Board { traces: Trace[]; shapes: Shape[] }
+export type Placed = Shape & { fixed?: boolean };
+export interface Board { traces: Trace[]; shapes: Placed[] }
 
 type Rand = () => number;
 interface Group { rand: Rand; plan: Map<number, number> }
@@ -79,7 +81,7 @@ export function circuit(width: number, height: number, seed: number): Board {
     }
 
   const traces: Trace[] = [];
-  const shapes: Shape[] = [];
+  const shapes: Placed[] = [];
   let active: Grower[] = [];
 
   const grow = (g: Omit<Grower, 'id' | 'run' | 'jog' | 'len' | 'cells' | 'forks'>) => {
@@ -137,7 +139,7 @@ export function circuit(width: number, height: number, seed: number): Board {
 
   const ended: Grower[] = [];
   // Components and vias, kept only if at least one of their traces survives.
-  const sources: { shapes: Shape[]; ids: number[]; links?: Trace[] }[] = [];
+  const sources: { shapes: Placed[]; ids: number[]; links?: Trace[] }[] = [];
   const alive = new Set<number>();
   const finish = (t: Grower, end: 'pad' | 'via' | 'edge') => {
     t.end = end;
@@ -340,15 +342,15 @@ export function circuit(width: number, height: number, seed: number): Board {
     for (const [k, [i, j]] of cells.entries()) {
       const [, , w, h, round] = part.pads[k];
       const [pw, ph] = turn % 2 ? [h, w] : [w, h];
-      if (round) source.shapes.push({ kind: 'ring', x: center(ox + i), y: center(oy + j), r: w * G, w: 7, t: 0, root });
-      else source.shapes.push({ kind: 'rect', x: center(ox + i) - (pw * G) / 2, y: center(oy + j) - (ph * G) / 2, w: pw * G, h: ph * G, t: 0, root });
+      if (round) source.shapes.push({ kind: 'ring', x: center(ox + i), y: center(oy + j), r: w * G, w: 7, t: 0, root, fixed: true });
+      else source.shapes.push({ kind: 'rect', x: center(ox + i) - (pw * G) / 2, y: center(oy + j) - (ph * G) / 2, w: pw * G, h: ph * G, t: 0, root, fixed: true });
     }
     if (part.body) {
       const [a, b] = rot(part.body[0], part.body[1]);
       const [c, d] = rot(part.body[2], part.body[3]);
       const x = (ox + Math.min(a, c) + 0.5) * G;
       const y = (oy + Math.min(b, d) + 0.5) * G;
-      source.shapes.push({ kind: 'outline', x, y, w: Math.abs(c - a) * G, h: Math.abs(d - b) * G, t: 0, root });
+      source.shapes.push({ kind: 'outline', x, y, w: Math.abs(c - a) * G, h: Math.abs(d - b) * G, t: 0, root, fixed: true });
     }
     for (const line of part.links ?? []) {
       const pts: number[] = [];
@@ -381,7 +383,7 @@ export function circuit(width: number, height: number, seed: number): Board {
   const via = (rand: Rand, i: number, j: number, key: number) => {
     if (!free(i - 3, j - 3, i + 3, j + 3)) return;
     const root = center(j);
-    const source = { shapes: [{ kind: 'via', x: center(i), y: center(j), t: 0, root }] as Shape[], ids: [] as number[] };
+    const source = { shapes: [{ kind: 'via', x: center(i), y: center(j), t: 0, root }] as Placed[], ids: [] as number[] };
     sources.push(source);
     block(i - 1, j - 1, i + 1, j + 1);
     // One trace per via, so a via never sits in the middle of a trace or a junction.

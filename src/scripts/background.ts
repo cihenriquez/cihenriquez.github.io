@@ -1,6 +1,7 @@
-// Draws the circuit board behind the page on a viewport-sized canvas. Each part of the board
-// starts growing when the reader scrolls down to it, at a steady pace, and never shrinks back.
-import { circuit, CREST_WIDTH, G, type Board, type Shape, type Trace } from './circuit';
+// Draws the circuit board behind the page on a viewport-sized canvas. The component footprints
+// are there from the start; the traces that connect them start growing when the reader scrolls
+// down to them, at a steady pace, and never shrink back.
+import { circuit, CREST_WIDTH, G, type Board, type Placed, type Trace } from './circuit';
 
 const BUCKET = 400; // board rows are indexed in bands this tall, in crest pixels
 const REVEAL = 0.85; // growth reaches this far down the viewport
@@ -8,7 +9,7 @@ const INK = '#000070'; // the CV's accent colour
 const RATE = 12; // growth rounds per second, the same on every screen size
 const EASE = 0.5; // s over which growth slows down as it catches up with the scroll
 
-interface Band { traces: Trace[]; shapes: Shape[] }
+interface Band { traces: Trace[]; shapes: Placed[] }
 
 export function background(bg: HTMLElement) {
   const crest = bg.querySelector('.crest')!;
@@ -59,7 +60,7 @@ export function background(bg: HTMLElement) {
     ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * box.left, dpr * box.top);
 
     const traces = new Set<Trace>();
-    const shapes = new Set<Shape>();
+    const shapes = new Set<Placed>();
     const first = Math.max(0, Math.floor(-box.top / scale / BUCKET));
     const last = Math.floor((h - box.top) / scale / BUCKET);
     for (let b = first; b <= last; b++) {
@@ -93,7 +94,7 @@ export function background(bg: HTMLElement) {
     }
 
     for (const s of shapes) {
-      if (clock(s.root) < s.t) continue;
+      if (!s.fixed && clock(s.root) < s.t) continue;
       ctx.beginPath();
       if (s.kind === 'rect') {
         ctx.fillStyle = INK;
