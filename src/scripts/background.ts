@@ -6,7 +6,7 @@ import { circuit, CREST_WIDTH, G, type Board, type Placed, type Trace } from './
 const BUCKET = 400; // board rows are indexed in bands this tall, in crest pixels
 const REVEAL = 0.85; // growth reaches this far down the viewport
 const INK = '#000070'; // the CV's accent colour
-const RATE = 14.4; // growth rounds per second, the same on every screen size
+const SCREEN = 9; // s the growth takes to cross one screen; with the traces' tails, a screen fills in ~10 s
 const EASE = 0.5; // s over which growth slows down as it catches up with the scroll
 
 interface Band { traces: Trace[]; shapes: Placed[] }
@@ -119,9 +119,9 @@ export function background(bg: HTMLElement) {
     }
   };
 
-  // Growth advances at a steady pace in board rounds rather than in pixels, so a phone (where a
-  // round is only a few pixels tall) grows as slowly as a desktop. It keeps going while the
-  // reader scrolls and eases out as it catches up.
+  // Growth advances at a steady pace measured in screens, so a screen fills in about the same
+  // time on a phone and on a desktop. It keeps going while the reader scrolls and eases out as
+  // it catches up.
   let last = 0;
   const tick = (now: number) => {
     frame = 0;
@@ -138,7 +138,7 @@ export function background(bg: HTMLElement) {
     last = now;
     // Whatever is above the viewport grows at once; only the part in view animates.
     shown = Math.max(shown, -box.top);
-    const speed = RATE * G * scale; // CSS px per second
+    const speed = (innerHeight * REVEAL) / SCREEN; // CSS px per second
     const left = goal - shown;
     if (left > 0) shown += Math.min(left, speed * Math.min(1, left / (speed * EASE)) * dt + 0.01);
     draw();
